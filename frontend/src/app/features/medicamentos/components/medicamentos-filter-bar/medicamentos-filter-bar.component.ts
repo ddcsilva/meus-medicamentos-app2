@@ -2,24 +2,23 @@ import { Component, EventEmitter, Input, Output } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { ButtonComponent } from "../../../../shared/ui/button/button.component";
-import { StatusValidade } from "../../models";
-
-/**
- * Interface para os filtros de medicamentos.
- */
-export interface MedicamentosFilterState {
-  busca: string;
-  status: StatusValidade | null;
-  ordenarPor: "nome" | "validade" | "quantidadeAtual" | "criadoEm" | null;
-  ordem: "asc" | "desc";
-}
+import {
+  MedicamentosFiltros,
+  ORDENACAO_OPCOES,
+  StatusValidade,
+  TipoMedicamento,
+} from "../../models";
 
 /**
  * Barra de filtros e busca para medicamentos.
  *
  * Permite:
- * - Busca por nome ou droga
+ * - Busca por nome, droga, marca ou laboratório
  * - Filtro por status de validade
+ * - Filtro por tipo de medicamento
+ * - Filtro por genérico/referência
+ * - Filtro por laboratório
+ * - Filtro por quantidade baixa
  * - Ordenação por diferentes campos
  *
  * @example
@@ -27,6 +26,8 @@ export interface MedicamentosFilterState {
  *   [filters]="currentFilters"
  *   [totalItems]="totalCount"
  *   [filteredCount]="filteredCount"
+ *   [laboratorios]="laboratoriosDisponiveis"
+ *   [tipos]="tiposDisponiveis"
  *   (filtersChange)="onFiltersChange($event)"
  *   (limparFiltros)="onLimparFiltros()"
  * />
@@ -43,8 +44,8 @@ export interface MedicamentosFilterState {
           <span class="search-icon">🔍</span>
           <input
             type="text"
-            placeholder="Buscar por nome ou droga..."
-            [ngModel]="filters.busca"
+            placeholder="Buscar por nome, droga, marca..."
+            [ngModel]="filters.busca || ''"
             (ngModelChange)="onBuscaChange($event)"
             class="search-input"
           />
@@ -60,57 +61,145 @@ export interface MedicamentosFilterState {
       </div>
 
       <!-- Filtros de status -->
-      <div class="status-filters">
-        <app-button
-          variant="ghost"
-          size="sm"
-          [class.active]="!filters.status"
-          (click)="onStatusChange(null)"
+      <div class="filter-section">
+        <span class="filter-label">Status:</span>
+        <div class="filter-buttons">
+          <app-button
+            variant="ghost"
+            size="sm"
+            [class.active]="!filters.status"
+            (click)="onStatusChange(null)"
+          >
+            Todos
+          </app-button>
+          <app-button
+            variant="ghost"
+            size="sm"
+            [class.active]="filters.status === 'valido'"
+            (click)="onStatusChange('valido')"
+          >
+            <span class="status-dot valido"></span>
+            Válidos
+          </app-button>
+          <app-button
+            variant="ghost"
+            size="sm"
+            [class.active]="filters.status === 'prestes'"
+            (click)="onStatusChange('prestes')"
+          >
+            <span class="status-dot prestes"></span>
+            Prestes
+          </app-button>
+          <app-button
+            variant="ghost"
+            size="sm"
+            [class.active]="filters.status === 'vencido'"
+            (click)="onStatusChange('vencido')"
+          >
+            <span class="status-dot vencido"></span>
+            Vencidos
+          </app-button>
+        </div>
+      </div>
+
+      <!-- Filtros avançados (expansível) -->
+      <div class="advanced-filters" [class.expanded]="showAdvanced">
+        <button
+          type="button"
+          class="toggle-advanced"
+          (click)="showAdvanced = !showAdvanced"
         >
-          Todos
-        </app-button>
-        <app-button
-          variant="ghost"
-          size="sm"
-          [class.active]="filters.status === 'valido'"
-          (click)="onStatusChange('valido')"
-        >
-          <span class="status-dot valido"></span>
-          Válidos
-        </app-button>
-        <app-button
-          variant="ghost"
-          size="sm"
-          [class.active]="filters.status === 'prestes'"
-          (click)="onStatusChange('prestes')"
-        >
-          <span class="status-dot prestes"></span>
-          Prestes
-        </app-button>
-        <app-button
-          variant="ghost"
-          size="sm"
-          [class.active]="filters.status === 'vencido'"
-          (click)="onStatusChange('vencido')"
-        >
-          <span class="status-dot vencido"></span>
-          Vencidos
-        </app-button>
+          {{ showAdvanced ? "▲ Menos filtros" : "▼ Mais filtros" }}
+        </button>
+
+        <div *ngIf="showAdvanced" class="advanced-content">
+          <!-- Tipo -->
+          <div class="filter-group">
+            <label class="filter-label">Tipo:</label>
+            <select
+              class="filter-select"
+              [ngModel]="filters.tipo || ''"
+              (ngModelChange)="onTipoChange($event)"
+            >
+              <option value="">Todos</option>
+              <option *ngFor="let tipo of tiposMedicamento" [value]="tipo">
+                {{ formatarTipo(tipo) }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Genérico -->
+          <div class="filter-group">
+            <label class="filter-label">Genérico:</label>
+            <div class="filter-buttons">
+              <app-button
+                variant="ghost"
+                size="sm"
+                [class.active]="filters.generico === null || filters.generico === undefined"
+                (click)="onGenericoChange(null)"
+              >
+                Todos
+              </app-button>
+              <app-button
+                variant="ghost"
+                size="sm"
+                [class.active]="filters.generico === true"
+                (click)="onGenericoChange(true)"
+              >
+                Genérico
+              </app-button>
+              <app-button
+                variant="ghost"
+                size="sm"
+                [class.active]="filters.generico === false"
+                (click)="onGenericoChange(false)"
+              >
+                Referência
+              </app-button>
+            </div>
+          </div>
+
+          <!-- Laboratório -->
+          <div *ngIf="laboratorios.length > 0" class="filter-group">
+            <label class="filter-label">Laboratório:</label>
+            <select
+              class="filter-select"
+              [ngModel]="filters.laboratorio || ''"
+              (ngModelChange)="onLaboratorioChange($event)"
+            >
+              <option value="">Todos</option>
+              <option *ngFor="let lab of laboratorios" [value]="lab">
+                {{ lab }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Quantidade baixa -->
+          <div class="filter-group">
+            <label class="checkbox-wrapper">
+              <input
+                type="checkbox"
+                [ngModel]="filters.quantidadeBaixa"
+                (ngModelChange)="onQuantidadeBaixaChange($event)"
+              />
+              <span class="checkbox-label">Apenas estoque baixo (&lt; 5 un)</span>
+            </label>
+          </div>
+        </div>
       </div>
 
       <!-- Ordenação -->
       <div class="sort-section">
-        <label class="sort-label">Ordenar por:</label>
+        <label class="filter-label">Ordenar por:</label>
         <select
-          class="sort-select"
+          class="filter-select"
           [ngModel]="filters.ordenarPor || ''"
           (ngModelChange)="onOrdenarPorChange($event)"
         >
           <option value="">Padrão</option>
-          <option value="nome">Nome</option>
-          <option value="validade">Validade</option>
-          <option value="quantidadeAtual">Quantidade</option>
-          <option value="criadoEm">Data de cadastro</option>
+          <option *ngFor="let opcao of ordenacaoOpcoes" [value]="opcao.valor">
+            {{ opcao.label }}
+          </option>
         </select>
         <app-button
           *ngIf="filters.ordenarPor"
@@ -118,6 +207,7 @@ export interface MedicamentosFilterState {
           size="sm"
           (click)="toggleOrdem()"
           class="sort-order-btn"
+          [title]="filters.ordem === 'asc' ? 'Crescente' : 'Decrescente'"
         >
           {{ filters.ordem === "asc" ? "↑" : "↓" }}
         </app-button>
@@ -209,16 +299,48 @@ export interface MedicamentosFilterState {
         }
       }
 
-      /* Filtros de status */
-      .status-filters {
+      /* Filtros */
+      .filter-section,
+      .filter-group {
         display: flex;
+        align-items: center;
         gap: var(--spacing-sm);
         flex-wrap: wrap;
       }
 
-      .status-filters app-button.active ::ng-deep button {
+      .filter-label {
+        font-size: var(--font-size-sm);
+        color: var(--color-text-secondary);
+        white-space: nowrap;
+        min-width: 80px;
+      }
+
+      .filter-buttons {
+        display: flex;
+        gap: var(--spacing-xs);
+        flex-wrap: wrap;
+      }
+
+      .filter-buttons app-button.active ::ng-deep button {
         background-color: var(--color-primary);
         color: white;
+      }
+
+      .filter-select {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-family: inherit;
+        font-size: var(--font-size-sm);
+        color: var(--color-text-primary);
+        background-color: var(--color-background);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius-md);
+        cursor: pointer;
+        min-width: 120px;
+
+        &:focus {
+          outline: none;
+          border-color: var(--color-primary);
+        }
       }
 
       .status-dot {
@@ -241,33 +363,57 @@ export interface MedicamentosFilterState {
         background-color: var(--color-vencido);
       }
 
+      /* Filtros avançados */
+      .advanced-filters {
+        border-top: 1px solid var(--color-border-light);
+        padding-top: var(--spacing-sm);
+      }
+
+      .toggle-advanced {
+        background: none;
+        border: none;
+        color: var(--color-primary);
+        font-size: var(--font-size-sm);
+        cursor: pointer;
+        padding: var(--spacing-xs) 0;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+
+      .advanced-content {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+        padding-top: var(--spacing-md);
+      }
+
+      .checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        cursor: pointer;
+      }
+
+      .checkbox-wrapper input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+      }
+
+      .checkbox-label {
+        font-size: var(--font-size-sm);
+        color: var(--color-text-secondary);
+      }
+
       /* Ordenação */
       .sort-section {
         display: flex;
         align-items: center;
         gap: var(--spacing-sm);
-      }
-
-      .sort-label {
-        font-size: var(--font-size-sm);
-        color: var(--color-text-secondary);
-        white-space: nowrap;
-      }
-
-      .sort-select {
-        padding: var(--spacing-xs) var(--spacing-sm);
-        font-family: inherit;
-        font-size: var(--font-size-sm);
-        color: var(--color-text-primary);
-        background-color: var(--color-background);
-        border: 1px solid var(--color-border);
-        border-radius: var(--border-radius-md);
-        cursor: pointer;
-
-        &:focus {
-          outline: none;
-          border-color: var(--color-primary);
-        }
+        padding-top: var(--spacing-sm);
+        border-top: 1px solid var(--color-border-light);
       }
 
       .sort-order-btn {
@@ -290,6 +436,16 @@ export interface MedicamentosFilterState {
 
       /* Responsividade */
       @media (max-width: 639px) {
+        .filter-section,
+        .filter-group {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .filter-label {
+          min-width: auto;
+        }
+
         .sort-section {
           flex-wrap: wrap;
         }
@@ -305,24 +461,45 @@ export interface MedicamentosFilterState {
 })
 export class MedicamentosFilterBarComponent {
   /** Estado atual dos filtros */
-  @Input() filters: MedicamentosFilterState = {
-    busca: "",
-    status: null,
-    ordenarPor: null,
-    ordem: "asc",
-  };
+  @Input() filters: MedicamentosFiltros = {};
 
-  /** Total de itens */
+  /** Total de itens (sem filtros) */
   @Input() totalItems: number = 0;
 
   /** Contagem de itens filtrados */
   @Input() filteredCount: number = 0;
 
+  /** Lista de laboratórios disponíveis (para dropdown) */
+  @Input() laboratorios: string[] = [];
+
+  /** Lista de tipos disponíveis (para dropdown) */
+  @Input() tipos: string[] = [];
+
   /** Evento emitido quando os filtros mudam */
-  @Output() filtersChange = new EventEmitter<Partial<MedicamentosFilterState>>();
+  @Output() filtersChange = new EventEmitter<Partial<MedicamentosFiltros>>();
 
   /** Evento emitido ao limpar filtros */
   @Output() limparFiltros = new EventEmitter<void>();
+
+  /** Se os filtros avançados estão visíveis */
+  showAdvanced: boolean = false;
+
+  /** Opções de ordenação */
+  readonly ordenacaoOpcoes = ORDENACAO_OPCOES;
+
+  /** Tipos de medicamento disponíveis */
+  readonly tiposMedicamento: TipoMedicamento[] = [
+    "comprimido",
+    "capsula",
+    "liquido",
+    "spray",
+    "creme",
+    "pomada",
+    "gel",
+    "gotas",
+    "injetavel",
+    "outro",
+  ];
 
   /**
    * Verifica se há filtros ativos.
@@ -331,22 +508,41 @@ export class MedicamentosFilterBarComponent {
     return !!(
       this.filters.busca ||
       this.filters.status ||
+      this.filters.tipo ||
+      this.filters.generico !== null && this.filters.generico !== undefined ||
+      this.filters.laboratorio ||
+      this.filters.quantidadeBaixa ||
       this.filters.ordenarPor
     );
   }
 
   onBuscaChange(busca: string): void {
-    this.filtersChange.emit({ busca });
+    this.filtersChange.emit({ busca: busca || undefined });
   }
 
   onStatusChange(status: StatusValidade | null): void {
     this.filtersChange.emit({ status });
   }
 
+  onTipoChange(tipo: string): void {
+    this.filtersChange.emit({ tipo: tipo || null });
+  }
+
+  onGenericoChange(generico: boolean | null): void {
+    this.filtersChange.emit({ generico });
+  }
+
+  onLaboratorioChange(laboratorio: string): void {
+    this.filtersChange.emit({ laboratorio: laboratorio || null });
+  }
+
+  onQuantidadeBaixaChange(quantidadeBaixa: boolean): void {
+    this.filtersChange.emit({ quantidadeBaixa });
+  }
+
   onOrdenarPorChange(ordenarPor: string): void {
-    const valor = ordenarPor || null;
     this.filtersChange.emit({
-      ordenarPor: valor as MedicamentosFilterState["ordenarPor"],
+      ordenarPor: (ordenarPor || null) as MedicamentosFiltros["ordenarPor"],
     });
   }
 
@@ -358,5 +554,23 @@ export class MedicamentosFilterBarComponent {
   onLimparFiltros(): void {
     this.limparFiltros.emit();
   }
-}
 
+  /**
+   * Formata o tipo de medicamento para exibição.
+   */
+  formatarTipo(tipo: string): string {
+    const formatMap: Record<string, string> = {
+      comprimido: "Comprimido",
+      capsula: "Cápsula",
+      liquido: "Líquido",
+      spray: "Spray",
+      creme: "Creme",
+      pomada: "Pomada",
+      gel: "Gel",
+      gotas: "Gotas",
+      injetavel: "Injetável",
+      outro: "Outro",
+    };
+    return formatMap[tipo] || tipo;
+  }
+}

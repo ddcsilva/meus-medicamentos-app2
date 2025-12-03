@@ -3,4 +3,5 @@
  */
 
 export * from "./medicamento.model";
+export * from "./medicamento-filter.model";
 

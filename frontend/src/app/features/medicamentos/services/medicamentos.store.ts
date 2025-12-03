@@ -4,9 +4,17 @@ import { ApiError } from "../../../core/api/api.service";
 import {
   CreateMedicamentoDto,
   Medicamento,
+  MedicamentosFiltros,
   StatusValidade,
+  TipoMedicamento,
   UpdateMedicamentoDto,
 } from "../models";
+import {
+  aplicarFiltros,
+  extrairLaboratorios,
+  extrairTipos,
+  temFiltrosAtivos,
+} from "../utils/medicamentos-filter.utils";
 import {
   MedicamentosApiService,
   MedicamentosFilter,
@@ -22,14 +30,9 @@ export interface StoreError {
 }
 
 /**
- * Interface para os filtros do store.
+ * Re-export do tipo de filtros para uso externo.
  */
-export interface MedicamentosStoreFilters {
-  status?: StatusValidade | null;
-  busca?: string;
-  ordenarPor?: "nome" | "validade" | "quantidadeAtual" | "criadoEm";
-  ordem?: "asc" | "desc";
-}
+export type MedicamentosStoreFilters = MedicamentosFiltros;
 
 /**
  * Store de Medicamentos com Angular Signals.
@@ -148,58 +151,37 @@ export class MedicamentosStore {
     () => this._items().filter((m) => m.quantidadeAtual === 0).length
   );
 
-  /** Lista filtrada de medicamentos */
+  /**
+   * Lista filtrada de medicamentos.
+   *
+   * Usa as funções utilitárias puras para aplicar filtros e ordenação.
+   */
   readonly filteredItems = computed(() => {
     const items = this._items();
     const filters = this._filters();
 
-    let result = [...items];
+    return aplicarFiltros(items, filters);
+  });
 
-    // Filtro por status
-    if (filters.status) {
-      result = result.filter((m) => m.statusValidade === filters.status);
-    }
+  /**
+   * Indica se há filtros ativos.
+   */
+  readonly hasActiveFilters = computed(() => {
+    return temFiltrosAtivos(this._filters());
+  });
 
-    // Filtro por busca (nome ou droga)
-    if (filters.busca && filters.busca.trim()) {
-      const busca = filters.busca.toLowerCase().trim();
-      result = result.filter(
-        (m) =>
-          m.nome.toLowerCase().includes(busca) ||
-          m.droga.toLowerCase().includes(busca) ||
-          m.marca.toLowerCase().includes(busca)
-      );
-    }
+  /**
+   * Lista de laboratórios únicos (para dropdown de filtro).
+   */
+  readonly laboratoriosDisponiveis = computed(() => {
+    return extrairLaboratorios(this._items());
+  });
 
-    // Ordenação
-    if (filters.ordenarPor) {
-      const ordem = filters.ordem === "desc" ? -1 : 1;
-
-      result.sort((a, b) => {
-        switch (filters.ordenarPor) {
-          case "nome":
-            return a.nome.localeCompare(b.nome) * ordem;
-          case "validade":
-            return (
-              (new Date(a.validade).getTime() -
-                new Date(b.validade).getTime()) *
-              ordem
-            );
-          case "quantidadeAtual":
-            return (a.quantidadeAtual - b.quantidadeAtual) * ordem;
-          case "criadoEm":
-            return (
-              (new Date(a.criadoEm).getTime() -
-                new Date(b.criadoEm).getTime()) *
-              ordem
-            );
-          default:
-            return 0;
-        }
-      });
-    }
-
-    return result;
+  /**
+   * Lista de tipos únicos (para dropdown de filtro).
+   */
+  readonly tiposDisponiveis = computed(() => {
+    return extrairTipos(this._items());
   });
 
   /** Indica se há erro */
@@ -482,10 +464,61 @@ export class MedicamentosStore {
    * @param ordem - Direção (asc/desc)
    */
   setOrdenacao(
-    ordenarPor: "nome" | "validade" | "quantidadeAtual" | "criadoEm",
+    ordenarPor: "nome" | "validade" | "quantidadeAtual" | "criadoEm" | "droga" | "atualizadoEm" | null,
     ordem: "asc" | "desc" = "asc"
   ): void {
     this._filters.update((current) => ({ ...current, ordenarPor, ordem }));
+  }
+
+  /**
+   * Define o filtro de tipo.
+   *
+   * @param tipo - Tipo de medicamento
+   */
+  setTipoFilter(tipo: TipoMedicamento | string | null): void {
+    this._filters.update((current) => ({ ...current, tipo }));
+  }
+
+  /**
+   * Define o filtro de genérico.
+   *
+   * @param generico - true = genérico, false = referência, null = todos
+   */
+  setGenericoFilter(generico: boolean | null): void {
+    this._filters.update((current) => ({ ...current, generico }));
+  }
+
+  /**
+   * Define o filtro de laboratório.
+   *
+   * @param laboratorio - Nome do laboratório
+   */
+  setLaboratorioFilter(laboratorio: string | null): void {
+    this._filters.update((current) => ({ ...current, laboratorio }));
+  }
+
+  /**
+   * Define o filtro de quantidade baixa.
+   *
+   * @param ativo - Se deve filtrar por quantidade baixa
+   * @param limite - Limite para considerar quantidade baixa (padrão: 5)
+   */
+  setQuantidadeBaixaFilter(ativo: boolean, limite: number = 5): void {
+    this._filters.update((current) => ({
+      ...current,
+      quantidadeBaixa: ativo,
+      limiteQuantidadeBaixa: limite,
+    }));
+  }
+
+  /**
+   * Alterna a direção da ordenação.
+   */
+  toggleOrdemFilter(): void {
+    this._filters.update((current) => ({
+      ...current,
+      ordem: current.ordem === "asc" ? "desc" : "asc",
+    }));
   }
 
   // ========================================
