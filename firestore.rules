@@ -1,0 +1,90 @@
+rules_version = '2';
+
+/**
+ * Regras de segurança do Firestore para Meus Medicamentos.
+ * 
+ * Princípios:
+ * - Usuários só podem acessar seus próprios dados
+ * - Autenticação é obrigatória para todas as operações
+ * - Validação de dados no servidor
+ */
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // =========================================================================
+    // FUNÇÕES AUXILIARES
+    // =========================================================================
+    
+    // Verifica se o usuário está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Verifica se o usuário é o dono do recurso
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Verifica se o campo criadoPor corresponde ao usuário autenticado
+    function isCreatedByUser() {
+      return isAuthenticated() && resource.data.criadoPor == request.auth.uid;
+    }
+    
+    // Verifica se o novo documento terá criadoPor igual ao usuário autenticado
+    function willBeCreatedByUser() {
+      return isAuthenticated() && request.resource.data.criadoPor == request.auth.uid;
+    }
+    
+    // =========================================================================
+    // REGRAS PARA MEDICAMENTOS
+    // =========================================================================
+    
+    match /medicamentos/{medicamentoId} {
+      // Leitura: apenas o dono pode ler
+      allow read: if isCreatedByUser();
+      
+      // Criação: usuário autenticado, deve ser o dono
+      allow create: if willBeCreatedByUser();
+      
+      // Atualização: apenas o dono pode atualizar
+      allow update: if isCreatedByUser();
+      
+      // Exclusão: apenas o dono pode excluir
+      allow delete: if isCreatedByUser();
+    }
+    
+    // =========================================================================
+    // REGRAS PARA USUÁRIOS (FUTURO)
+    // =========================================================================
+    
+    match /usuarios/{userId} {
+      // Usuário só pode acessar seu próprio documento
+      allow read, write: if isOwner(userId);
+    }
+    
+    // =========================================================================
+    // REGRAS PARA HISTÓRICO (FUTURO - V2)
+    // =========================================================================
+    
+    match /historico/{historicoId} {
+      // Leitura: apenas o dono pode ler
+      allow read: if isCreatedByUser();
+      
+      // Criação: apenas sistema (Cloud Functions) ou dono
+      allow create: if willBeCreatedByUser();
+      
+      // Histórico não pode ser alterado ou excluído
+      allow update, delete: if false;
+    }
+    
+    // =========================================================================
+    // REGRA PADRÃO: NEGAR TUDO
+    // =========================================================================
+    
+    // Qualquer outra collection é bloqueada por padrão
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

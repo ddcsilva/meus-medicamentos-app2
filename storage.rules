@@ -1,0 +1,60 @@
+rules_version = '2';
+
+/**
+ * Regras de segurança do Firebase Storage para Meus Medicamentos.
+ * 
+ * Estrutura de arquivos:
+ * - medicamentos/{userId}/{medicamentoId}/foto.{ext}
+ */
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // =========================================================================
+    // FUNÇÕES AUXILIARES
+    // =========================================================================
+    
+    // Verifica se o usuário está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Verifica se o usuário é o dono do arquivo
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Verifica se o arquivo é uma imagem válida
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*')
+        && request.resource.size < 5 * 1024 * 1024; // Max 5MB
+    }
+    
+    // =========================================================================
+    // REGRAS PARA FOTOS DE MEDICAMENTOS
+    // =========================================================================
+    
+    match /medicamentos/{userId}/{medicamentoId}/{fileName} {
+      // Leitura: apenas o dono pode ler
+      allow read: if isOwner(userId);
+      
+      // Upload: apenas o dono, arquivo deve ser imagem válida
+      allow create: if isOwner(userId) && isValidImage();
+      
+      // Atualização: apenas o dono, arquivo deve ser imagem válida
+      allow update: if isOwner(userId) && isValidImage();
+      
+      // Exclusão: apenas o dono
+      allow delete: if isOwner(userId);
+    }
+    
+    // =========================================================================
+    // REGRA PADRÃO: NEGAR TUDO
+    // =========================================================================
+    
+    // Qualquer outro caminho é bloqueado
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

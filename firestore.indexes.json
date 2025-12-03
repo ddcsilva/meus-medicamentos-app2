@@ -1,0 +1,30 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "medicamentos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "criadoPor", "order": "ASCENDING" },
+        { "fieldPath": "criadoEm", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "medicamentos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "criadoPor", "order": "ASCENDING" },
+        { "fieldPath": "validade", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "medicamentos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "criadoPor", "order": "ASCENDING" },
+        { "fieldPath": "nome", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
+

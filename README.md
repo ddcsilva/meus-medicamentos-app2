@@ -78,9 +78,9 @@ meus-medicamentos/
 
 - Node.js 18+
 - npm ou yarn
-- Conta Firebase configurada
+- Conta Firebase configurada (veja [FIREBASE_SETUP.md](./FIREBASE_SETUP.md))
 
-### Instalação
+### 1. Instalação
 
 ```bash
 # Instalar dependências de todos os projetos
@@ -92,7 +92,44 @@ npm run install:api
 npm run install:functions
 ```
 
-### Desenvolvimento
+### 2. Configuração de Ambiente
+
+#### API (Backend)
+
+```bash
+# Copie o arquivo de exemplo
+cp api/env.example api/.env
+
+# Edite o arquivo .env com suas configurações:
+# - PORT: porta da API (padrão: 3000)
+# - FIREBASE_SERVICE_ACCOUNT_PATH: caminho para o arquivo de credenciais
+# - CORS_ORIGIN: URL do frontend (padrão: http://localhost:4200)
+```
+
+**Importante:** Baixe o arquivo de credenciais do Firebase:
+1. Acesse o [Firebase Console](https://console.firebase.google.com/)
+2. Vá em Configurações do Projeto > Contas de Serviço
+3. Clique em "Gerar nova chave privada"
+4. Salve como `api/firebase-service-account.json`
+
+#### Frontend
+
+O frontend usa arquivos `environment.ts` para configuração. Edite:
+- `frontend/src/environments/environment.development.ts` (desenvolvimento)
+- `frontend/src/environments/environment.ts` (produção)
+
+Configure as credenciais do Firebase (obtidas no Firebase Console > Configurações > Seus apps).
+
+#### Cloud Functions (Opcional)
+
+```bash
+# Copie o arquivo de exemplo
+cp functions/env.example functions/.env
+
+# Configure as variáveis para notificações (futuro)
+```
+
+### 3. Desenvolvimento
 
 ```bash
 # Rodar frontend e API simultaneamente
@@ -101,14 +138,39 @@ npm run dev
 # Ou rodar separadamente
 npm run dev:frontend   # Angular em http://localhost:4200
 npm run dev:api        # API em http://localhost:3000
+
+# Rodar emuladores Firebase (opcional)
+npm run emulators
 ```
 
-### Build
+### 4. Build
 
 ```bash
+# Build de todos os projetos
+npm run build
+
+# Ou individualmente
 npm run build:frontend
 npm run build:api
 npm run build:functions
+```
+
+### 5. Testes
+
+```bash
+# Rodar todos os testes
+npm test
+
+# Ou individualmente
+npm run test:frontend
+npm run test:api
+```
+
+### 6. Deploy
+
+```bash
+# Deploy das Cloud Functions
+npm run deploy:functions
 ```
 
 ---
