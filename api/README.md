@@ -1,60 +1,153 @@
-# API - Meus Medicamentos
+# 🔥 Meus Medicamentos API
 
-API RESTful Node.js + Express + TypeScript para o sistema de controle de estoque familiar de medicamentos.
+API REST para o sistema de controle de estoque familiar de medicamentos.
 
-## Tecnologias
+## 📋 Tecnologias
 
-- Node.js 18+
-- Express
-- TypeScript
-- Firebase Admin SDK
+- **Node.js** >= 18
+- **TypeScript** 5.x
+- **Express** 4.x
+- **Firebase Admin SDK** 12.x
 
-## Estrutura (a ser criada)
+## 📁 Estrutura de Pastas
 
 ```
-src/
-  controllers/    # Controladores de rotas
-  services/       # Lógica de negócio
-  repositories/   # Acesso a dados (Firestore)
-  middlewares/    # Autenticação, validação, tratamento de erros
-  routes/         # Definição de rotas
-  config/         # Configurações da aplicação
-  firebase/       # Inicialização do Firebase Admin
-  models/         # Interfaces e tipos
+api/
+├── src/
+│   ├── config/           # Configurações (env, constantes)
+│   ├── controllers/      # Controllers (entrada HTTP)
+│   ├── services/         # Services (lógica de negócio)
+│   ├── repositories/     # Repositories (acesso a dados)
+│   ├── middlewares/      # Middlewares Express
+│   ├── routes/           # Definição de rotas
+│   ├── firebase/         # Configuração Firebase Admin
+│   ├── models/           # Interfaces e tipos
+│   ├── utils/            # Funções utilitárias
+│   ├── app.ts            # Configuração do Express
+│   └── index.ts          # Entrypoint
+├── dist/                 # Código compilado (gerado)
+├── package.json
+├── tsconfig.json
+└── .eslintrc.json
 ```
 
-## Endpoints
+## 🚀 Começando
 
-| Método | Endpoint                        | Descrição                  |
-| ------ | ------------------------------- | -------------------------- |
-| POST   | `/auth/login`                   | Autenticação               |
-| GET    | `/medicamentos`                 | Listar medicamentos        |
-| POST   | `/medicamentos`                 | Criar medicamento          |
-| GET    | `/medicamentos/:id`             | Buscar por ID              |
-| PUT    | `/medicamentos/:id`             | Atualizar medicamento      |
-| PATCH  | `/medicamentos/:id/quantidade`  | Atualizar quantidade       |
-| DELETE | `/medicamentos/:id`             | Remover medicamento        |
+### Pré-requisitos
 
-## Scripts
+- Node.js >= 18
+- npm ou yarn
+
+### Instalação
 
 ```bash
-npm run dev     # Servidor de desenvolvimento com hot reload
-npm run build   # Compilar TypeScript
-npm start       # Executar build de produção
-npm run lint    # Verificação de código
+# Na pasta api/
+npm install
 ```
 
-## Configuração
+### Configuração
 
-Criar arquivo `.env` na raiz da pasta `api/`:
+1. Copie o arquivo de exemplo de ambiente:
+
+```bash
+cp env.example .env
+```
+
+2. Edite o arquivo `.env` com suas configurações:
 
 ```env
 PORT=3000
 NODE_ENV=development
-FIREBASE_PROJECT_ID=seu-projeto
-FIREBASE_PRIVATE_KEY=sua-chave
-FIREBASE_CLIENT_EMAIL=seu-email
+CORS_ORIGIN=http://localhost:4200
 ```
 
-**IMPORTANTE:** Nunca versionar o arquivo `.env` ou credenciais do Firebase.
+### Executando
 
+```bash
+# Desenvolvimento (com hot-reload)
+npm run dev
+
+# Build para produção
+npm run build
+
+# Executar build de produção
+npm start
+```
+
+## 📡 Endpoints
+
+### Health Check
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/health` | Status de saúde da API |
+| GET | `/health/details` | Detalhes (apenas em dev) |
+
+#### Exemplo de resposta
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "uptime": 3600,
+  "environment": "development",
+  "version": "1.0.0"
+}
+```
+
+### Medicamentos (a implementar)
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/medicamentos` | Lista todos |
+| GET | `/api/medicamentos/:id` | Busca por ID |
+| POST | `/api/medicamentos` | Cria novo |
+| PUT | `/api/medicamentos/:id` | Atualiza |
+| PATCH | `/api/medicamentos/:id/quantidade` | Atualiza quantidade |
+| DELETE | `/api/medicamentos/:id` | Remove |
+
+## 🏗️ Arquitetura
+
+A API segue uma arquitetura em camadas:
+
+```
+Request → Routes → Controllers → Services → Repositories → Firebase
+                                    ↓
+                              Middlewares
+```
+
+### Camadas
+
+1. **Routes**: Define os endpoints e conecta com controllers
+2. **Controllers**: Recebe requisições HTTP e retorna respostas
+3. **Services**: Contém a lógica de negócio
+4. **Repositories**: Abstrai o acesso ao Firestore
+5. **Middlewares**: Intercepta requisições (auth, validação, erros)
+
+## 🔒 Segurança
+
+- **Helmet**: Headers de segurança HTTP
+- **CORS**: Configurado para aceitar apenas origens permitidas
+- **Firebase Auth**: Verificação de tokens JWT (a implementar)
+
+## 📝 Scripts NPM
+
+| Script | Descrição |
+|--------|-----------|
+| `npm run dev` | Inicia em modo desenvolvimento |
+| `npm run build` | Compila TypeScript |
+| `npm start` | Executa build de produção |
+| `npm run lint` | Verifica código com ESLint |
+| `npm run lint:fix` | Corrige problemas de lint |
+| `npm run clean` | Remove pasta dist/ |
+
+## 🧪 Testes
+
+```bash
+# Testes (a implementar)
+npm test
+```
+
+---
+
+**Última atualização:** Task 20 - Setup da API
