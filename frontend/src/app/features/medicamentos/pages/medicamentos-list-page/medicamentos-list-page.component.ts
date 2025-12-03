@@ -1,9 +1,13 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit, inject } from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
+import { NotificationService } from "../../../../core/services/notification.service";
 import { ButtonComponent } from "../../../../shared/ui/button/button.component";
 import { CardComponent } from "../../../../shared/ui/card/card.component";
+import { EmptyStateComponent } from "../../../../shared/ui/empty-state/empty-state.component";
+import { ErrorAlertComponent } from "../../../../shared/ui/error-alert/error-alert.component";
 import { LoadingComponent } from "../../../../shared/ui/loading/loading.component";
+import { PageLoadingComponent } from "../../../../shared/ui/page-loading/page-loading.component";
 import { StatusBadgeComponent } from "../../../../shared/ui/status-badge/status-badge.component";
 import { QuantidadeControlComponent } from "../../components/quantidade-control/quantidade-control.component";
 import { Medicamento, StatusValidade } from "../../models";
@@ -30,6 +34,9 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
     CardComponent,
     StatusBadgeComponent,
     LoadingComponent,
+    PageLoadingComponent,
+    EmptyStateComponent,
+    ErrorAlertComponent,
     QuantidadeControlComponent,
   ],
   template: `
@@ -116,22 +123,18 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
       </div>
 
       <!-- Erro -->
-      <div *ngIf="store.hasError()" class="error-alert">
-        <span class="error-icon">⚠️</span>
-        <span>{{ store.error()?.message }}</span>
-        <app-button variant="ghost" size="sm" (click)="store.clearError()">
-          Fechar
-        </app-button>
-      </div>
+      <app-error-alert
+        [message]="store.error()?.message"
+        [showRetry]="true"
+        (retry)="store.loadAll()"
+        (dismiss)="store.clearError()"
+      />
 
       <!-- Loading -->
-      <div *ngIf="store.loading()" class="loading-container">
-        <app-loading
-          size="lg"
-          text="Carregando medicamentos..."
-          [vertical]="true"
-        ></app-loading>
-      </div>
+      <app-page-loading
+        [show]="store.loading() && store.items().length === 0"
+        text="Carregando medicamentos..."
+      />
 
       <!-- Lista de medicamentos -->
       <div *ngIf="!store.loading()" class="medicamentos-grid">
@@ -197,41 +200,26 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
         </app-card>
       </div>
 
-      <!-- Estado vazio -->
-      <div
-        *ngIf="!store.loading() && store.filteredItems().length === 0"
-        class="empty-state"
-      >
-        <div class="empty-icon">💊</div>
-        <h3>
-          {{
-            store.filters().busca || store.filters().status
-              ? "Nenhum medicamento encontrado"
-              : "Nenhum medicamento cadastrado"
-          }}
-        </h3>
-        <p>
-          {{
-            store.filters().busca || store.filters().status
-              ? "Tente alterar os filtros de busca."
-              : "Comece adicionando seu primeiro medicamento ao estoque."
-          }}
-        </p>
-        <app-button
-          *ngIf="!store.filters().busca && !store.filters().status"
-          variant="primary"
-          routerLink="/medicamentos/novo"
-        >
-          + Adicionar Medicamento
-        </app-button>
-        <app-button
-          *ngIf="store.filters().busca || store.filters().status"
-          variant="outline"
-          (click)="limparFiltros()"
-        >
-          Limpar Filtros
-        </app-button>
-      </div>
+      <!-- Estado vazio - Busca sem resultados -->
+      <app-empty-state
+        *ngIf="!store.loading() && store.filteredItems().length === 0 && store.hasActiveFilters()"
+        variant="search"
+        icon="🔍"
+        title="Nenhum medicamento encontrado"
+        description="Tente alterar os termos de busca ou remover alguns filtros."
+        actionLabel="Limpar Filtros"
+        (action)="limparFiltros()"
+      />
+
+      <!-- Estado vazio - Sem medicamentos -->
+      <app-empty-state
+        *ngIf="!store.loading() && store.items().length === 0 && !store.hasActiveFilters()"
+        icon="💊"
+        title="Nenhum medicamento cadastrado"
+        description="Comece adicionando seu primeiro medicamento ao estoque familiar."
+        actionLabel="+ Adicionar Medicamento"
+        (action)="navegarParaNovo()"
+      />
     </div>
   `,
   styles: [
@@ -539,9 +527,17 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
 export class MedicamentosListPageComponent implements OnInit {
   readonly store = inject(MedicamentosStore);
   private readonly router = inject(Router);
+  private readonly notification = inject(NotificationService);
 
   ngOnInit(): void {
     this.store.loadAll();
+  }
+
+  /**
+   * Navega para a página de novo medicamento.
+   */
+  navegarParaNovo(): void {
+    this.router.navigate(["/medicamentos/novo"]);
   }
 
   /**
@@ -572,8 +568,7 @@ export class MedicamentosListPageComponent implements OnInit {
   async incrementarRapido(id: string): Promise<void> {
     const result = await this.store.incrementarRapido(id);
     if (!result.success && result.error) {
-      // Erro já é tratado pelo store
-      console.error("Erro ao incrementar:", result.error.message);
+      this.notification.error(result.error.message);
     }
   }
 
@@ -583,8 +578,7 @@ export class MedicamentosListPageComponent implements OnInit {
   async decrementarRapido(id: string): Promise<void> {
     const result = await this.store.decrementarRapido(id);
     if (!result.success && result.error) {
-      // Erro já é tratado pelo store
-      console.error("Erro ao decrementar:", result.error.message);
+      this.notification.error(result.error.message);
     }
   }
 

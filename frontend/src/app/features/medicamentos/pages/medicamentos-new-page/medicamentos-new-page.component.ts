@@ -7,6 +7,7 @@ import {
   Validators,
 } from "@angular/forms";
 import { Router, RouterLink } from "@angular/router";
+import { NotificationService } from "../../../../core/services/notification.service";
 import { ButtonComponent } from "../../../../shared/ui/button/button.component";
 import { CardComponent } from "../../../../shared/ui/card/card.component";
 import { LoadingComponent } from "../../../../shared/ui/loading/loading.component";
@@ -510,6 +511,7 @@ export class MedicamentosNewPageComponent {
   readonly store = inject(MedicamentosStore);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+  private readonly notification = inject(NotificationService);
 
   /** Tipos de medicamento disponíveis */
   readonly tiposMedicamento: TipoMedicamento[] = [
@@ -610,7 +612,12 @@ export class MedicamentosNewPageComponent {
     const medicamento = await this.store.create(dto);
 
     if (medicamento) {
+      this.notification.success("Medicamento cadastrado com sucesso!", {
+        title: "Sucesso",
+      });
       this.router.navigate(["/medicamentos"]);
+    } else if (this.store.error()) {
+      this.notification.error(this.store.error()!.message);
     }
   }
 }

@@ -1,6 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, RouterLink } from '@angular/router';
+import { ToastComponent } from '../../shared/ui/toast/toast.component';
+import { AuthService } from '../../core/services/auth.service';
+import { ButtonComponent } from '../../shared/ui/button/button.component';
 
 /**
  * Layout principal da aplicação para rotas autenticadas.
@@ -9,14 +12,22 @@ import { RouterOutlet } from '@angular/router';
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet],
+  imports: [CommonModule, RouterOutlet, RouterLink, ToastComponent, ButtonComponent],
   template: `
     <div class="main-layout">
       <header class="main-header">
         <div class="container">
-          <h1 class="logo">💊 Meus Medicamentos</h1>
+          <a routerLink="/medicamentos" class="logo">💊 Meus Medicamentos</a>
           <nav class="main-nav">
-            <!-- Navegação será implementada nas próximas tasks -->
+            <span class="user-email">{{ authService.userEmail() }}</span>
+            <app-button
+              variant="ghost"
+              size="sm"
+              class="logout-btn"
+              (click)="logout()"
+            >
+              Sair
+            </app-button>
           </nav>
         </div>
       </header>
@@ -32,6 +43,9 @@ import { RouterOutlet } from '@angular/router';
           <p>&copy; 2024 Meus Medicamentos - Controle de Estoque Familiar</p>
         </div>
       </footer>
+
+      <!-- Toast Container para notificações -->
+      <app-toast />
     </div>
   `,
   styles: [`
@@ -77,9 +91,32 @@ import { RouterOutlet } from '@angular/router';
     }
     
     .main-nav {
-      /* Navegação será implementada nas próximas tasks */
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+    
+    .user-email {
+      font-size: var(--font-size-sm);
+      opacity: 0.9;
+    }
+    
+    .logout-btn ::ng-deep button {
+      color: white;
+      opacity: 0.9;
+    }
+    
+    .logout-btn ::ng-deep button:hover {
+      opacity: 1;
+      background-color: rgba(255, 255, 255, 0.1);
     }
   `]
 })
-export class MainLayoutComponent {}
+export class MainLayoutComponent {
+  readonly authService = inject(AuthService);
+
+  async logout(): Promise<void> {
+    await this.authService.logout();
+  }
+}
 

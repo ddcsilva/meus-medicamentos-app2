@@ -8,8 +8,10 @@ import {
 } from "@angular/forms";
 import { Router } from "@angular/router";
 import { AuthService } from "../../../../core/services/auth.service";
+import { NotificationService } from "../../../../core/services/notification.service";
 import { ButtonComponent } from "../../../../shared/ui/button/button.component";
 import { InputComponent } from "../../../../shared/ui/input/input.component";
+import { ToastComponent } from "../../../../shared/ui/toast/toast.component";
 
 /**
  * Página de login com formulário reativo.
@@ -28,6 +30,7 @@ import { InputComponent } from "../../../../shared/ui/input/input.component";
     ReactiveFormsModule,
     ButtonComponent,
     InputComponent,
+    ToastComponent,
   ],
   template: `
     <div class="login-form-container">
@@ -111,6 +114,9 @@ import { InputComponent } from "../../../../shared/ui/input/input.component";
         </p>
       </div>
     </div>
+
+    <!-- Toast Container para notificações -->
+    <app-toast />
   `,
   styles: [
     `
@@ -258,6 +264,7 @@ export class LoginPageComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+  private readonly notification = inject(NotificationService);
 
   // Signals para estado local
   readonly isLoading = signal(false);
@@ -332,17 +339,23 @@ export class LoginPageComponent {
       const result = await this.authService.login({ email, password });
 
       if (result.success) {
-        // Login bem-sucedido - redireciona para medicamentos
+        // Login bem-sucedido - notifica e redireciona
+        this.notification.success("Login realizado com sucesso!", {
+          title: "Bem-vindo!",
+          duration: 3000,
+        });
         await this.router.navigate(["/medicamentos"]);
       } else {
         // Exibe mensagem de erro
-        this.errorMessage.set(
-          result.error?.message || "Erro ao fazer login. Tente novamente."
-        );
+        const errorMsg = result.error?.message || "Erro ao fazer login. Tente novamente.";
+        this.errorMessage.set(errorMsg);
+        this.notification.error(errorMsg);
       }
     } catch (error) {
       console.error("Erro inesperado no login:", error);
-      this.errorMessage.set("Erro inesperado. Tente novamente.");
+      const errorMsg = "Erro inesperado. Tente novamente.";
+      this.errorMessage.set(errorMsg);
+      this.notification.error(errorMsg);
     } finally {
       this.isLoading.set(false);
     }

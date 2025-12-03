@@ -1,5 +1,5 @@
-import { Component, OnInit, inject, signal, computed } from "@angular/core";
 import { CommonModule } from "@angular/common";
+import { Component, OnInit, computed, inject, signal } from "@angular/core";
 import {
   FormBuilder,
   FormGroup,
@@ -7,17 +7,18 @@ import {
   Validators,
 } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
+import { NotificationService } from "../../../../core/services/notification.service";
 import { ButtonComponent } from "../../../../shared/ui/button/button.component";
 import { CardComponent } from "../../../../shared/ui/card/card.component";
-import { StatusBadgeComponent } from "../../../../shared/ui/status-badge/status-badge.component";
 import { LoadingComponent } from "../../../../shared/ui/loading/loading.component";
+import { StatusBadgeComponent } from "../../../../shared/ui/status-badge/status-badge.component";
 import { QuantidadeControlComponent } from "../../components/quantidade-control/quantidade-control.component";
-import { MedicamentosStore } from "../../services/medicamentos.store";
 import {
   Medicamento,
-  UpdateMedicamentoDto,
   TipoMedicamento,
+  UpdateMedicamentoDto,
 } from "../../models";
+import { MedicamentosStore } from "../../services/medicamentos.store";
 
 /**
  * Página de detalhes e edição de medicamento.
@@ -49,7 +50,11 @@ import {
           </a>
         </div>
         <div class="header-content">
-          <h1>{{ isEditMode() ? "Editar Medicamento" : "Detalhes do Medicamento" }}</h1>
+          <h1>
+            {{
+              isEditMode() ? "Editar Medicamento" : "Detalhes do Medicamento"
+            }}
+          </h1>
         </div>
       </div>
 
@@ -103,11 +108,16 @@ import {
               </div>
               <div class="info-card">
                 <span class="info-label">Tipo</span>
-                <span class="info-value">{{ formatarTipo(medicamento()!.tipo) }}</span>
+                <span class="info-value">{{
+                  formatarTipo(medicamento()!.tipo)
+                }}</span>
               </div>
               <div class="info-card">
                 <span class="info-label">Validade</span>
-                <span class="info-value" [class.vencido]="medicamento()!.statusValidade === 'vencido'">
+                <span
+                  class="info-value"
+                  [class.vencido]="medicamento()!.statusValidade === 'vencido'"
+                >
                   {{ formatarData(medicamento()!.validade) }}
                 </span>
               </div>
@@ -143,7 +153,8 @@ import {
                 Cadastrado em: {{ formatarData(medicamento()!.criadoEm) }}
               </span>
               <span class="metadata-item">
-                Última atualização: {{ formatarData(medicamento()!.atualizadoEm) }}
+                Última atualização:
+                {{ formatarData(medicamento()!.atualizadoEm) }}
               </span>
             </div>
 
@@ -165,7 +176,11 @@ import {
 
         <!-- Modo Edição -->
         <app-card *ngIf="isEditMode()" variant="elevated">
-          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-container">
+          <form
+            [formGroup]="form"
+            (ngSubmit)="onSubmit()"
+            class="form-container"
+          >
             <!-- Seção: Identificação -->
             <div class="form-section">
               <h3 class="section-title">Identificação</h3>
@@ -254,7 +269,10 @@ import {
                     class="form-input"
                     [class.has-error]="isFieldInvalid('laboratorio')"
                   />
-                  <span *ngIf="isFieldInvalid('laboratorio')" class="field-error">
+                  <span
+                    *ngIf="isFieldInvalid('laboratorio')"
+                    class="field-error"
+                  >
                     {{ getFieldError("laboratorio") }}
                   </span>
                 </div>
@@ -277,7 +295,10 @@ import {
                     [class.has-error]="isFieldInvalid('tipo')"
                   >
                     <option value="">Selecione...</option>
-                    <option *ngFor="let tipo of tiposMedicamento" [value]="tipo">
+                    <option
+                      *ngFor="let tipo of tiposMedicamento"
+                      [value]="tipo"
+                    >
                       {{ formatarTipo(tipo) }}
                     </option>
                   </select>
@@ -321,7 +342,10 @@ import {
                     [class.has-error]="isFieldInvalid('quantidadeTotal')"
                     min="1"
                   />
-                  <span *ngIf="isFieldInvalid('quantidadeTotal')" class="field-error">
+                  <span
+                    *ngIf="isFieldInvalid('quantidadeTotal')"
+                    class="field-error"
+                  >
                     {{ getFieldError("quantidadeTotal") }}
                   </span>
                 </div>
@@ -338,7 +362,10 @@ import {
                     [class.has-error]="isFieldInvalid('quantidadeAtual')"
                     min="0"
                   />
-                  <span *ngIf="isFieldInvalid('quantidadeAtual')" class="field-error">
+                  <span
+                    *ngIf="isFieldInvalid('quantidadeAtual')"
+                    class="field-error"
+                  >
                     {{ getFieldError("quantidadeAtual") }}
                   </span>
                 </div>
@@ -366,7 +393,11 @@ import {
 
             <!-- Ações -->
             <div class="form-actions">
-              <app-button type="button" variant="outline" (click)="cancelarEdicao()">
+              <app-button
+                type="button"
+                variant="outline"
+                (click)="cancelarEdicao()"
+              >
                 Cancelar
               </app-button>
               <app-button
@@ -383,10 +414,15 @@ import {
       </div>
 
       <!-- Medicamento não encontrado -->
-      <div *ngIf="!store.loading() && !medicamento() && !store.hasError()" class="not-found">
+      <div
+        *ngIf="!store.loading() && !medicamento() && !store.hasError()"
+        class="not-found"
+      >
         <div class="not-found-icon">🔍</div>
         <h2>Medicamento não encontrado</h2>
-        <p>O medicamento que você está procurando não existe ou foi removido.</p>
+        <p>
+          O medicamento que você está procurando não existe ou foi removido.
+        </p>
         <app-button variant="primary" routerLink="/medicamentos">
           Voltar para lista
         </app-button>
@@ -800,6 +836,7 @@ export class MedicamentosDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+  private readonly notification = inject(NotificationService);
 
   /** ID do medicamento */
   private medicamentoId: string | null = null;
@@ -928,7 +965,7 @@ export class MedicamentosDetailPageComponent implements OnInit {
 
     const result = await this.store.incrementarRapido(med.id);
     if (!result.success && result.error) {
-      console.error("Erro ao incrementar:", result.error.message);
+      this.notification.error(result.error.message);
     }
   }
 
@@ -941,7 +978,7 @@ export class MedicamentosDetailPageComponent implements OnInit {
 
     const result = await this.store.decrementarRapido(med.id);
     if (!result.success && result.error) {
-      console.error("Erro ao decrementar:", result.error.message);
+      this.notification.error(result.error.message);
     }
   }
 
@@ -962,7 +999,10 @@ export class MedicamentosDetailPageComponent implements OnInit {
       this.excluindo.set(false);
 
       if (sucesso) {
+        this.notification.success("Medicamento excluído com sucesso!");
         this.router.navigate(["/medicamentos"]);
+      } else if (this.store.error()) {
+        this.notification.error(this.store.error()!.message);
       }
     }
   }
@@ -1046,12 +1086,17 @@ export class MedicamentosDetailPageComponent implements OnInit {
     const medicamento = await this.store.update(this.medicamentoId, dto);
 
     if (medicamento) {
+      this.notification.success("Medicamento atualizado com sucesso!", {
+        title: "Sucesso",
+      });
       this.isEditMode.set(false);
       this.router.navigate([], {
         relativeTo: this.route,
         queryParams: { editar: null },
         queryParamsHandling: "merge",
       });
+    } else if (this.store.error()) {
+      this.notification.error(this.store.error()!.message);
     }
   }
 }

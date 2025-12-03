@@ -118,5 +118,79 @@ export class MeuComponente {
 
 ---
 
-**Última atualização:** Task 8 - Serviço de autenticação
+## NotificationService
+
+Serviço de notificações (toasts/snackbars) para feedback visual ao usuário.
+
+### Uso
+
+```typescript
+import { NotificationService } from '@core/services/notification.service';
+
+@Component({...})
+export class MeuComponente {
+  private notification = inject(NotificationService);
+  
+  salvar() {
+    // Sucesso
+    this.notification.success('Dados salvos com sucesso!');
+    
+    // Erro
+    this.notification.error('Falha ao salvar dados.');
+    
+    // Aviso
+    this.notification.warning('Atenção: dados incompletos.');
+    
+    // Informação
+    this.notification.info('Dica: use atalhos de teclado.');
+    
+    // Com opções
+    this.notification.success('Item excluído!', {
+      title: 'Sucesso',
+      duration: 3000,
+      action: {
+        label: 'Desfazer',
+        callback: () => this.desfazer()
+      }
+    });
+  }
+}
+```
+
+### Métodos Disponíveis
+
+| Método | Retorno | Descrição |
+|--------|---------|-----------|
+| `success(message, options?)` | `string` | Exibe notificação de sucesso |
+| `error(message, options?)` | `string` | Exibe notificação de erro |
+| `warning(message, options?)` | `string` | Exibe notificação de aviso |
+| `info(message, options?)` | `string` | Exibe notificação informativa |
+| `dismiss(id)` | `void` | Remove uma notificação |
+| `dismissAll()` | `void` | Remove todas as notificações |
+
+### Opções
+
+```typescript
+interface NotificationOptions {
+  title?: string;           // Título opcional
+  duration?: number;        // Duração em ms (padrão: 5000)
+  dismissible?: boolean;    // Se pode ser fechada (padrão: true)
+  action?: {
+    label: string;          // Texto do botão de ação
+    callback: () => void;   // Função a executar
+  };
+}
+```
+
+### Signals Disponíveis
+
+| Signal | Tipo | Descrição |
+|--------|------|-----------|
+| `notifications` | `Signal<Notification[]>` | Lista de notificações ativas |
+| `hasNotifications` | `Signal<boolean>` | Se há notificações ativas |
+| `notificationCount` | `Signal<number>` | Contagem de notificações |
+
+---
+
+**Última atualização:** Task 19 - Feedbacks de UX
 
