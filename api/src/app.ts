@@ -3,7 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import { env } from "./config/env";
-import { errorMiddleware, notFoundMiddleware } from "./middlewares";
+import { errorMiddleware, notFoundMiddleware, apiRateLimiter } from "./middlewares";
 import routes from "./routes";
 import healthRoutes from "./routes/health.routes";
 
@@ -50,6 +50,13 @@ export function createApp(): Application {
   } else {
     app.use(morgan("combined"));
   }
+
+  // ========================================
+  // RATE LIMITING
+  // ========================================
+
+  // Aplica rate limiting global na API
+  app.use("/api", apiRateLimiter);
 
   // ========================================
   // ROTAS

@@ -1,6 +1,17 @@
 import { Router } from "express";
 import { MedicamentosController } from "../controllers/medicamentos.controller";
-import { authMiddleware, uploadImage } from "../middlewares";
+import {
+  authMiddleware,
+  uploadImage,
+  writeRateLimiter,
+  uploadRateLimiter,
+  handleValidationErrors,
+  createMedicamentoValidation,
+  updateMedicamentoValidation,
+  updateQuantidadeValidation,
+  idParamValidation,
+  listFiltersValidation,
+} from "../middlewares";
 
 /**
  * Router para rotas de medicamentos.
@@ -60,7 +71,12 @@ router.get("/estatisticas", MedicamentosController.estatisticas);
  * @example
  * GET /medicamentos?status=prestes&ordenarPor=validade&ordem=asc
  */
-router.get("/", MedicamentosController.listar);
+router.get(
+  "/",
+  listFiltersValidation,
+  handleValidationErrors,
+  MedicamentosController.listar
+);
 
 /**
  * GET /medicamentos/:id
@@ -72,7 +88,12 @@ router.get("/", MedicamentosController.listar);
  *
  * @throws 404 - Medicamento não encontrado
  */
-router.get("/:id", MedicamentosController.buscarPorId);
+router.get(
+  "/:id",
+  idParamValidation,
+  handleValidationErrors,
+  MedicamentosController.buscarPorId
+);
 
 /**
  * POST /medicamentos
@@ -96,7 +117,13 @@ router.get("/:id", MedicamentosController.buscarPorId);
  *
  * @throws 400 - Dados inválidos
  */
-router.post("/", MedicamentosController.criar);
+router.post(
+  "/",
+  writeRateLimiter,
+  createMedicamentoValidation,
+  handleValidationErrors,
+  MedicamentosController.criar
+);
 
 /**
  * PUT /medicamentos/:id
@@ -123,7 +150,14 @@ router.post("/", MedicamentosController.criar);
  * @throws 400 - Dados inválidos
  * @throws 404 - Medicamento não encontrado
  */
-router.put("/:id", MedicamentosController.atualizar);
+router.put(
+  "/:id",
+  writeRateLimiter,
+  idParamValidation,
+  updateMedicamentoValidation,
+  handleValidationErrors,
+  MedicamentosController.atualizar
+);
 
 /**
  * PATCH /medicamentos/:id/quantidade
@@ -141,7 +175,13 @@ router.put("/:id", MedicamentosController.atualizar);
  * @throws 400 - Quantidade inválida ou excede o total
  * @throws 404 - Medicamento não encontrado
  */
-router.patch("/:id/quantidade", MedicamentosController.atualizarQuantidade);
+router.patch(
+  "/:id/quantidade",
+  idParamValidation,
+  updateQuantidadeValidation,
+  handleValidationErrors,
+  MedicamentosController.atualizarQuantidade
+);
 
 /**
  * DELETE /medicamentos/:id
@@ -154,7 +194,13 @@ router.patch("/:id/quantidade", MedicamentosController.atualizarQuantidade);
  *
  * @throws 404 - Medicamento não encontrado
  */
-router.delete("/:id", MedicamentosController.remover);
+router.delete(
+  "/:id",
+  writeRateLimiter,
+  idParamValidation,
+  handleValidationErrors,
+  MedicamentosController.remover
+);
 
 /**
  * POST /medicamentos/:id/foto
@@ -170,7 +216,14 @@ router.delete("/:id", MedicamentosController.remover);
  * @throws 400 - Arquivo inválido ou não enviado
  * @throws 404 - Medicamento não encontrado
  */
-router.post("/:id/foto", uploadImage, MedicamentosController.uploadFoto);
+router.post(
+  "/:id/foto",
+  uploadRateLimiter,
+  idParamValidation,
+  handleValidationErrors,
+  uploadImage,
+  MedicamentosController.uploadFoto
+);
 
 /**
  * DELETE /medicamentos/:id/foto
@@ -183,7 +236,13 @@ router.post("/:id/foto", uploadImage, MedicamentosController.uploadFoto);
  *
  * @throws 404 - Medicamento não encontrado
  */
-router.delete("/:id/foto", MedicamentosController.removerFoto);
+router.delete(
+  "/:id/foto",
+  writeRateLimiter,
+  idParamValidation,
+  handleValidationErrors,
+  MedicamentosController.removerFoto
+);
 
 export default router;
 
