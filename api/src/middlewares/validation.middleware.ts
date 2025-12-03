@@ -285,3 +285,4 @@ export const listFiltersValidation: ValidationChain[] = [
     .withMessage("Tamanho da página deve ser entre 1 e 100"),
 ];
 
+

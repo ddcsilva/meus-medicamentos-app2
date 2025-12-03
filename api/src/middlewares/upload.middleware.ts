@@ -140,3 +140,4 @@ export const UPLOAD_LIMITS = {
   allowedExtensions: ALLOWED_EXTENSIONS,
 };
 
+

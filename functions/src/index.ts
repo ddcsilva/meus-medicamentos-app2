@@ -140,3 +140,4 @@ export const healthCheck = functions
 //     // Placeholder para implementação futura
 //   });
 
+

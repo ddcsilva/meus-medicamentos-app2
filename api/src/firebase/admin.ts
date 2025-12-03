@@ -110,3 +110,4 @@ export function getApp(): admin.app.App {
 // Re-exporta o módulo admin para uso direto se necessário
 export { admin };
 
+

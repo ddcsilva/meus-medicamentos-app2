@@ -197,3 +197,4 @@ export interface MedicamentosFiltrosDto {
   pageSize?: number;
 }
 
+

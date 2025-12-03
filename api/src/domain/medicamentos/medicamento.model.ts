@@ -100,3 +100,4 @@ export interface Medicamento {
  */
 export type MedicamentoPartial = Partial<Omit<Medicamento, "id">>;
 
+

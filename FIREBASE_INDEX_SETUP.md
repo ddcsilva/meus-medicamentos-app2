@@ -38,3 +38,4 @@ Após criar o índice, aguarde alguns minutos e teste novamente. O erro 500 deve
 
 O código foi ajustado para fazer ordenação em memória quando necessário, evitando a necessidade de índices compostos na maioria dos casos. Mas o índice ainda é recomendado para melhor performance.
 
+
