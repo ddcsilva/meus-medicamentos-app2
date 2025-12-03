@@ -62,6 +62,8 @@ api/.env.*.local
 # Firebase credentials (NEVER commit these)
 **/serviceAccountKey.json
 **/firebase-adminsdk*.json
+**/firebase-service-account.json
+api/firebase-service-account.json
 **/.firebaserc
 **/firebase-debug.log
 **/firestore-debug.log

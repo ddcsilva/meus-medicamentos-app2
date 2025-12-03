@@ -116,6 +116,14 @@ export class MedicamentosService implements IMedicamentosService {
         filtrados = this.filtrarPorBusca(filtrados, filtros.busca);
       }
 
+      // Ordenação em memória (se não for por criadoEm, que já vem ordenado do Firestore)
+      const ordenarPor = filtros?.ordenarPor || "criadoEm";
+      const ordem = filtros?.ordem || "desc";
+
+      if (ordenarPor !== "criadoEm") {
+        filtrados = this.ordenarEmMemoria(filtrados, ordenarPor, ordem);
+      }
+
       // Converter para DTOs de resposta
       const items = medicamentosToResponseDtos(filtrados);
 
@@ -486,6 +494,38 @@ export class MedicamentosService implements IMedicamentosService {
         (campo) => campo && campo.toLowerCase().includes(termoBusca)
       );
     });
+  }
+
+  /**
+   * Ordena medicamentos em memória.
+   */
+  private ordenarEmMemoria(
+    medicamentos: Medicamento[],
+    campo: "nome" | "validade" | "quantidadeAtual" | "criadoEm",
+    ordem: "asc" | "desc"
+  ): Medicamento[] {
+    const sorted = [...medicamentos].sort((a, b) => {
+      let comparacao = 0;
+
+      switch (campo) {
+        case "nome":
+          comparacao = a.nome.localeCompare(b.nome);
+          break;
+        case "validade":
+          comparacao = new Date(a.validade).getTime() - new Date(b.validade).getTime();
+          break;
+        case "quantidadeAtual":
+          comparacao = a.quantidadeAtual - b.quantidadeAtual;
+          break;
+        case "criadoEm":
+          comparacao = new Date(a.criadoEm).getTime() - new Date(b.criadoEm).getTime();
+          break;
+      }
+
+      return ordem === "asc" ? comparacao : -comparacao;
+    });
+
+    return sorted;
   }
 
   // ============================================================================

@@ -86,18 +86,10 @@ export class MedicamentosRepository implements IMedicamentosRepository {
       }
 
       // Ordenação
-      const ordenarPor = filtros?.ordenarPor || "criadoEm";
+      // NOTA: Para evitar necessidade de índices compostos, sempre ordenamos por criadoEm no Firestore
+      // A ordenação por outros campos será feita em memória no serviço
       const ordem = filtros?.ordem || "desc";
-
-      const fieldMap: Record<string, string> = {
-        nome: FIRESTORE_INDEXED_FIELDS.NOME,
-        validade: FIRESTORE_INDEXED_FIELDS.VALIDADE,
-        quantidadeAtual: FIRESTORE_INDEXED_FIELDS.QUANTIDADE_ATUAL,
-        criadoEm: FIRESTORE_INDEXED_FIELDS.CRIADO_EM,
-      };
-
-      const orderField = fieldMap[ordenarPor] || FIRESTORE_INDEXED_FIELDS.CRIADO_EM;
-      query = query.orderBy(orderField, ordem);
+      query = query.orderBy(FIRESTORE_INDEXED_FIELDS.CRIADO_EM, ordem);
 
       // Paginação (se especificada)
       if (filtros?.pageSize) {
