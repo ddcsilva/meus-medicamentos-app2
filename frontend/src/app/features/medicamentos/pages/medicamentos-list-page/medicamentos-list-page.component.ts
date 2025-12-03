@@ -5,6 +5,7 @@ import { ButtonComponent } from "../../../../shared/ui/button/button.component";
 import { CardComponent } from "../../../../shared/ui/card/card.component";
 import { LoadingComponent } from "../../../../shared/ui/loading/loading.component";
 import { StatusBadgeComponent } from "../../../../shared/ui/status-badge/status-badge.component";
+import { QuantidadeControlComponent } from "../../components/quantidade-control/quantidade-control.component";
 import { Medicamento, StatusValidade } from "../../models";
 import { MedicamentosStore } from "../../services/medicamentos.store";
 
@@ -29,6 +30,7 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
     CardComponent,
     StatusBadgeComponent,
     LoadingComponent,
+    QuantidadeControlComponent,
   ],
   template: `
     <div class="medicamentos-page">
@@ -180,32 +182,16 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
               >
                 Editar
               </app-button>
-              <div class="quantity-controls">
-                <app-button
-                  variant="outline"
-                  size="sm"
-                  [disabled]="
-                    med.quantidadeAtual === 0 || store.isItemLoading(med.id)
-                  "
-                  (click)="decrementar(med)"
-                >
-                  −
-                </app-button>
-                <span class="quantity-display">
-                  <span *ngIf="store.isItemLoading(med.id)">...</span>
-                  <span *ngIf="!store.isItemLoading(med.id)">{{
-                    med.quantidadeAtual
-                  }}</span>
-                </span>
-                <app-button
-                  variant="outline"
-                  size="sm"
-                  [disabled]="store.isItemLoading(med.id)"
-                  (click)="incrementar(med)"
-                >
-                  +
-                </app-button>
-              </div>
+              <app-quantidade-control
+                [quantidade]="med.quantidadeAtual"
+                [quantidadeTotal]="med.quantidadeTotal"
+                [loading]="store.isItemLoading(med.id)"
+                [min]="0"
+                size="sm"
+                [showTotal]="true"
+                (incrementar)="incrementarRapido(med.id)"
+                (decrementar)="decrementarRapido(med.id)"
+              />
             </div>
           </div>
         </app-card>
@@ -581,17 +567,25 @@ export class MedicamentosListPageComponent implements OnInit {
   }
 
   /**
-   * Incrementa a quantidade de um medicamento.
+   * Incrementa a quantidade de um medicamento de forma rápida.
    */
-  incrementar(med: Medicamento): void {
-    this.store.incrementarQuantidade(med.id, med.quantidadeAtual);
+  async incrementarRapido(id: string): Promise<void> {
+    const result = await this.store.incrementarRapido(id);
+    if (!result.success && result.error) {
+      // Erro já é tratado pelo store
+      console.error("Erro ao incrementar:", result.error.message);
+    }
   }
 
   /**
-   * Decrementa a quantidade de um medicamento.
+   * Decrementa a quantidade de um medicamento de forma rápida.
    */
-  decrementar(med: Medicamento): void {
-    this.store.decrementarQuantidade(med.id, med.quantidadeAtual);
+  async decrementarRapido(id: string): Promise<void> {
+    const result = await this.store.decrementarRapido(id);
+    if (!result.success && result.error) {
+      // Erro já é tratado pelo store
+      console.error("Erro ao decrementar:", result.error.message);
+    }
   }
 
   /**

@@ -30,6 +30,22 @@ export interface StoreError {
 }
 
 /**
+ * Resultado de uma operação de atualização de quantidade.
+ */
+export interface QuantidadeUpdateResult {
+  /** Se a operação foi bem sucedida */
+  success: boolean;
+  /** Medicamento atualizado (se sucesso) */
+  medicamento?: Medicamento;
+  /** Erro (se falha) */
+  error?: StoreError;
+  /** Quantidade anterior */
+  quantidadeAnterior?: number;
+  /** Nova quantidade */
+  quantidadeNova?: number;
+}
+
+/**
  * Re-export do tipo de filtros para uso externo.
  */
 export type MedicamentosStoreFilters = MedicamentosFiltros;
@@ -333,22 +349,46 @@ export class MedicamentosStore {
   /**
    * Atualiza a quantidade de um medicamento.
    *
+   * Suporta atualização otimista para UX mais rápida.
+   *
    * @param id - ID do medicamento
    * @param quantidade - Nova quantidade
-   * @returns Medicamento atualizado ou null
+   * @param options - Opções de atualização
+   * @returns Resultado da operação
    */
   async updateQuantidade(
     id: string,
-    quantidade: number
-  ): Promise<Medicamento | null> {
+    quantidade: number,
+    options: { optimistic?: boolean } = { optimistic: true }
+  ): Promise<QuantidadeUpdateResult> {
     // Validação: não permitir quantidade negativa
     if (quantidade < 0) {
-      this._error.set({
+      const error: StoreError = {
         message: "Quantidade não pode ser negativa.",
         code: "VALIDATION_ERROR",
         action: "updateQuantidade",
-      });
-      return null;
+      };
+      this._error.set(error);
+      return { success: false, error };
+    }
+
+    // Buscar medicamento atual para rollback
+    const medicamentoAtual = this._items().find((m) => m.id === id);
+    if (!medicamentoAtual) {
+      const error: StoreError = {
+        message: "Medicamento não encontrado.",
+        code: "NOT_FOUND",
+        action: "updateQuantidade",
+      };
+      this._error.set(error);
+      return { success: false, error };
+    }
+
+    const quantidadeAnterior = medicamentoAtual.quantidadeAtual;
+
+    // Atualização otimista: atualiza UI antes da confirmação da API
+    if (options.optimistic) {
+      this._updateQuantidadeLocal(id, quantidade);
     }
 
     this._setItemLoading(id, true);
@@ -359,7 +399,7 @@ export class MedicamentosStore {
         this.api.updateQuantidade(id, quantidade)
       );
 
-      // Atualiza na lista local
+      // Atualiza com dados confirmados da API
       this._updateItemInList(medicamento);
 
       // Atualiza selected se for o mesmo
@@ -367,10 +407,25 @@ export class MedicamentosStore {
         this._selected.set(medicamento);
       }
 
-      return medicamento;
+      return {
+        success: true,
+        medicamento,
+        quantidadeAnterior,
+        quantidadeNova: quantidade,
+      };
     } catch (error) {
+      // Rollback em caso de erro
+      if (options.optimistic) {
+        this._updateQuantidadeLocal(id, quantidadeAnterior);
+      }
+
       this._handleError(error, "updateQuantidade");
-      return null;
+
+      return {
+        success: false,
+        error: this._error()!,
+        quantidadeAnterior,
+      };
     } finally {
       this._setItemLoading(id, false);
     }
@@ -382,13 +437,13 @@ export class MedicamentosStore {
    * @param id - ID do medicamento
    * @param quantidadeAtual - Quantidade atual
    * @param incremento - Valor a incrementar (padrão: 1)
-   * @returns Medicamento atualizado ou null
+   * @returns Resultado da operação
    */
   async incrementarQuantidade(
     id: string,
     quantidadeAtual: number,
     incremento: number = 1
-  ): Promise<Medicamento | null> {
+  ): Promise<QuantidadeUpdateResult> {
     const novaQuantidade = quantidadeAtual + incremento;
     return this.updateQuantidade(id, novaQuantidade);
   }
@@ -399,15 +454,76 @@ export class MedicamentosStore {
    * @param id - ID do medicamento
    * @param quantidadeAtual - Quantidade atual
    * @param decremento - Valor a decrementar (padrão: 1)
-   * @returns Medicamento atualizado ou null
+   * @returns Resultado da operação
    */
   async decrementarQuantidade(
     id: string,
     quantidadeAtual: number,
     decremento: number = 1
-  ): Promise<Medicamento | null> {
+  ): Promise<QuantidadeUpdateResult> {
     const novaQuantidade = Math.max(0, quantidadeAtual - decremento);
     return this.updateQuantidade(id, novaQuantidade);
+  }
+
+  /**
+   * Incrementa a quantidade de um medicamento de forma rápida.
+   * Usa o medicamento da lista para obter a quantidade atual.
+   *
+   * @param id - ID do medicamento
+   * @param incremento - Valor a incrementar (padrão: 1)
+   * @returns Resultado da operação
+   */
+  async incrementarRapido(
+    id: string,
+    incremento: number = 1
+  ): Promise<QuantidadeUpdateResult> {
+    const medicamento = this._items().find((m) => m.id === id);
+    if (!medicamento) {
+      const error: StoreError = {
+        message: "Medicamento não encontrado.",
+        code: "NOT_FOUND",
+        action: "incrementarRapido",
+      };
+      this._error.set(error);
+      return { success: false, error };
+    }
+    return this.incrementarQuantidade(id, medicamento.quantidadeAtual, incremento);
+  }
+
+  /**
+   * Decrementa a quantidade de um medicamento de forma rápida.
+   * Usa o medicamento da lista para obter a quantidade atual.
+   *
+   * @param id - ID do medicamento
+   * @param decremento - Valor a decrementar (padrão: 1)
+   * @returns Resultado da operação
+   */
+  async decrementarRapido(
+    id: string,
+    decremento: number = 1
+  ): Promise<QuantidadeUpdateResult> {
+    const medicamento = this._items().find((m) => m.id === id);
+    if (!medicamento) {
+      const error: StoreError = {
+        message: "Medicamento não encontrado.",
+        code: "NOT_FOUND",
+        action: "decrementarRapido",
+      };
+      this._error.set(error);
+      return { success: false, error };
+    }
+
+    // Não permitir decrementar abaixo de zero
+    if (medicamento.quantidadeAtual === 0) {
+      return {
+        success: true,
+        medicamento,
+        quantidadeAnterior: 0,
+        quantidadeNova: 0,
+      };
+    }
+
+    return this.decrementarQuantidade(id, medicamento.quantidadeAtual, decremento);
   }
 
   // ========================================
@@ -602,6 +718,37 @@ export class MedicamentosStore {
     this._items.update((items) =>
       items.map((m) => (m.id === medicamento.id ? medicamento : m))
     );
+  }
+
+  /**
+   * Atualiza apenas a quantidade de um item na lista local.
+   * Usado para atualização otimista.
+   */
+  private _updateQuantidadeLocal(id: string, quantidade: number): void {
+    this._items.update((items) =>
+      items.map((m) =>
+        m.id === id
+          ? {
+              ...m,
+              quantidadeAtual: quantidade,
+              atualizadoEm: new Date().toISOString(),
+            }
+          : m
+      )
+    );
+
+    // Atualiza selected se for o mesmo
+    if (this._selected()?.id === id) {
+      this._selected.update((med) =>
+        med
+          ? {
+              ...med,
+              quantidadeAtual: quantidade,
+              atualizadoEm: new Date().toISOString(),
+            }
+          : null
+      );
+    }
   }
 
   /**
