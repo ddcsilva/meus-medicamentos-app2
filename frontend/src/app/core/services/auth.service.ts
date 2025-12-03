@@ -8,31 +8,7 @@ import {
   User,
   UserCredential,
 } from '@angular/fire/auth';
-
-/**
- * Interface para o resultado de operações de autenticação.
- */
-export interface AuthResult {
-  success: boolean;
-  user?: User | null;
-  error?: AuthErrorInfo;
-}
-
-/**
- * Interface para informações de erro de autenticação.
- */
-export interface AuthErrorInfo {
-  code: string;
-  message: string;
-}
-
-/**
- * Interface para dados de login.
- */
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
+import { AuthErrorInfo, AuthResult, LoginCredentials } from './auth/models';
 
 /**
  * Serviço de autenticação que encapsula Firebase Auth.
@@ -63,7 +39,6 @@ export class AuthService implements OnDestroy {
   private readonly _auth = inject(Auth);
   private _authStateSubscription: (() => void) | null = null;
 
-  // Signals para estado reativo
   private readonly _currentUser = signal<User | null>(null);
   private readonly _authLoading = signal<boolean>(true);
   private readonly _authError = signal<AuthErrorInfo | null>(null);

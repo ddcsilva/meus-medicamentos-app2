@@ -1,11 +1,8 @@
-import { Component, inject } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import {
-  NotificationService,
-  Notification,
-  NotificationType,
-} from "../../../core/services/notification.service";
-import { ButtonComponent } from "../button/button.component";
+import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { NotificationService } from '../../../core/services/notification.service';
+import { Notification, NotificationType } from '../../../core/services/notification/models';
+import { ButtonComponent } from '../button/button.component';
 
 /**
  * Componente de Toast/Snackbar.
@@ -17,59 +14,54 @@ import { ButtonComponent } from "../button/button.component";
  * <app-toast />
  */
 @Component({
-  selector: "app-toast",
+  selector: 'app-toast',
   standalone: true,
   imports: [CommonModule, ButtonComponent],
   template: `
     <div class="toast-container" role="region" aria-label="Notificações">
       @for (notification of notificationService.notifications(); track notification.id) {
-        <div
-          class="toast"
-          [class]="'toast--' + notification.type"
-          role="alert"
-          [attr.aria-live]="notification.type === 'error' ? 'assertive' : 'polite'"
-        >
-          <!-- Ícone -->
-          <span class="toast-icon" aria-hidden="true">
-            {{ getIcon(notification.type) }}
-          </span>
+      <div
+        class="toast"
+        [class]="'toast--' + notification.type"
+        role="alert"
+        [attr.aria-live]="notification.type === 'error' ? 'assertive' : 'polite'"
+      >
+        <!-- Ícone -->
+        <span class="toast-icon" aria-hidden="true">
+          {{ getIcon(notification.type) }}
+        </span>
 
-          <!-- Conteúdo -->
-          <div class="toast-content">
-            <strong *ngIf="notification.title" class="toast-title">
-              {{ notification.title }}
-            </strong>
-            <p class="toast-message">{{ notification.message }}</p>
-          </div>
-
-          <!-- Ações -->
-          <div class="toast-actions">
-            <button
-              *ngIf="notification.action"
-              type="button"
-              class="toast-action-btn"
-              (click)="onAction(notification)"
-            >
-              {{ notification.action.label }}
-            </button>
-            <button
-              *ngIf="notification.dismissible"
-              type="button"
-              class="toast-close-btn"
-              (click)="dismiss(notification.id)"
-              aria-label="Fechar notificação"
-            >
-              ✕
-            </button>
-          </div>
-
-          <!-- Barra de progresso -->
-          <div
-            *ngIf="notification.duration > 0"
-            class="toast-progress"
-            [style.animation-duration.ms]="notification.duration"
-          ></div>
+        <!-- Conteúdo -->
+        <div class="toast-content">
+          <strong *ngIf="notification.title" class="toast-title">
+            {{ notification.title }}
+          </strong>
+          <p class="toast-message">{{ notification.message }}</p>
         </div>
+
+        <!-- Ações -->
+        <div class="toast-actions">
+          <button *ngIf="notification.action" type="button" class="toast-action-btn" (click)="onAction(notification)">
+            {{ notification.action.label }}
+          </button>
+          <button
+            *ngIf="notification.dismissible"
+            type="button"
+            class="toast-close-btn"
+            (click)="dismiss(notification.id)"
+            aria-label="Fechar notificação"
+          >
+            ✕
+          </button>
+        </div>
+
+        <!-- Barra de progresso -->
+        <div
+          *ngIf="notification.duration > 0"
+          class="toast-progress"
+          [style.animation-duration.ms]="notification.duration"
+        ></div>
+      </div>
       }
     </div>
   `,
@@ -258,10 +250,10 @@ export class ToastComponent {
    */
   getIcon(type: NotificationType): string {
     const icons: Record<NotificationType, string> = {
-      success: "✓",
-      error: "✕",
-      warning: "⚠",
-      info: "ℹ",
+      success: '✓',
+      error: '✕',
+      warning: '⚠',
+      info: 'ℹ',
     };
     return icons[type];
   }
@@ -283,4 +275,3 @@ export class ToastComponent {
     }
   }
 }
-

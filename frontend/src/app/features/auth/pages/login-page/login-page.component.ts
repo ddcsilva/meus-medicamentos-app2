@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -21,8 +21,9 @@ export class LoginPageComponent {
   private readonly notification = inject(NotificationService);
 
   readonly isLoading = signal(false);
-  readonly errorMessage = signal<string | null>(null);
   readonly showPassword = signal(false);
+
+  readonly errorMessage = computed(() => this.authService.authError()?.message ?? null);
 
   readonly loginForm: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -71,6 +72,7 @@ export class LoginPageComponent {
 
   /**
    * Submete o formulário de login.
+   * O erro é gerenciado automaticamente pelo AuthService.
    */
   async onSubmit(): Promise<void> {
     this.loginForm.markAllAsTouched();
@@ -80,29 +82,19 @@ export class LoginPageComponent {
     }
 
     this.isLoading.set(true);
-    this.errorMessage.set(null);
+    this.authService.clearError();
 
     const { email, password } = this.loginForm.value;
+    const result = await this.authService.login({ email, password });
 
-    try {
-      const result = await this.authService.login({ email, password });
+    this.isLoading.set(false);
 
-      if (result.success) {
-        this.notification.success('Login realizado com sucesso!', {
-          title: 'Bem-vindo!',
-          duration: 3000,
-        });
-        await this.router.navigate(['/medicamentos']);
-      } else {
-        const errorMsg = result.error?.message || 'Erro ao fazer login. Tente novamente.';
-        this.errorMessage.set(errorMsg);
-      }
-    } catch (error) {
-      console.error('Erro inesperado no login:', error);
-      const errorMsg = 'Erro inesperado. Tente novamente.';
-      this.errorMessage.set(errorMsg);
-    } finally {
-      this.isLoading.set(false);
+    if (result.success) {
+      this.notification.success('Login realizado com sucesso!', {
+        title: 'Bem-vindo!',
+        duration: 3000,
+      });
+      await this.router.navigate(['/medicamentos']);
     }
   }
 }

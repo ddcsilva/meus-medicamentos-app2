@@ -1,39 +1,5 @@
-import { computed, Injectable, signal } from '@angular/core';
-
-/**
- * Tipos de notificação.
- */
-export type NotificationType = 'success' | 'error' | 'warning' | 'info';
-
-/**
- * Interface para uma notificação.
- */
-export interface Notification {
-  id: string;
-  type: NotificationType;
-  message: string;
-  title?: string;
-  duration: number;
-  dismissible: boolean;
-  createdAt: number;
-  action?: {
-    label: string;
-    callback: () => void;
-  };
-}
-
-/**
- * Opções para criar uma notificação.
- */
-export interface NotificationOptions {
-  title?: string;
-  duration?: number;
-  dismissible?: boolean;
-  action?: {
-    label: string;
-    callback: () => void;
-  };
-}
+import { computed, Injectable, OnDestroy, signal } from '@angular/core';
+import { Notification, NotificationOptions, NotificationType } from './notification/models';
 
 /**
  * Configuração padrão por tipo de notificação.
@@ -69,14 +35,20 @@ const DEFAULT_DURATIONS: Record<NotificationType, number> = {
 @Injectable({
   providedIn: 'root',
 })
-export class NotificationService {
+export class NotificationService implements OnDestroy {
   private readonly _notifications = signal<Notification[]>([]);
+  private readonly _timers = new Map<string, ReturnType<typeof setTimeout>>();
   private readonly MAX_NOTIFICATIONS = 5;
   private _idCounter = 0;
 
   readonly notifications = this._notifications.asReadonly();
   readonly hasNotifications = computed(() => this._notifications().length > 0);
   readonly notificationCount = computed(() => this._notifications().length);
+
+  ngOnDestroy(): void {
+    this._timers.forEach((timer) => clearTimeout(timer));
+    this._timers.clear();
+  }
 
   /**
    * Exibe uma notificação de sucesso.
@@ -114,23 +86,40 @@ export class NotificationService {
   }
 
   /**
-   * Remove uma notificação pelo ID.
+   * Remove uma notificação pelo ID e cancela seu timer.
    */
   dismiss(id: string): void {
+    const timer = this._timers.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      this._timers.delete(id);
+    }
+
     this._notifications.update((notifications) => notifications.filter((n) => n.id !== id));
   }
 
   /**
-   * Remove todas as notificações.
+   * Remove todas as notificações e cancela todos os timers.
    */
   dismissAll(): void {
+    this._timers.forEach((timer) => clearTimeout(timer));
+    this._timers.clear();
     this._notifications.set([]);
   }
 
   /**
-   * Remove notificações por tipo.
+   * Remove notificações por tipo e cancela seus timers.
    */
   dismissByType(type: NotificationType): void {
+    const toRemove = this._notifications().filter((n) => n.type === type);
+    toRemove.forEach((n) => {
+      const timer = this._timers.get(n.id);
+      if (timer) {
+        clearTimeout(timer);
+        this._timers.delete(n.id);
+      }
+    });
+
     this._notifications.update((notifications) => notifications.filter((n) => n.type !== type));
   }
 
@@ -161,9 +150,11 @@ export class NotificationService {
     });
 
     if (duration > 0) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
+        this._timers.delete(id);
         this.dismiss(id);
       }, duration);
+      this._timers.set(id, timer);
     }
 
     return id;

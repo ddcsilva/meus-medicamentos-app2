@@ -1,6 +1,7 @@
-import { inject } from "@angular/core";
-import { Router, CanActivateFn, UrlTree } from "@angular/router";
-import { AuthService } from "../services/auth.service";
+import { inject } from '@angular/core';
+import { CanActivateFn, Router, UrlTree } from '@angular/router';
+import { AuthService } from '../services/auth.service';
+import { waitForAuthReady } from './auth/utils';
 
 /**
  * Guard de autenticação para proteger rotas que requerem usuário autenticado.
@@ -20,19 +21,16 @@ export const authGuard: CanActivateFn = async (): Promise<boolean | UrlTree> => 
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  // Aguarda o carregamento inicial do estado de autenticação
   if (authService.authLoading()) {
-    await waitForAuthLoading(authService);
+    await waitForAuthReady(authService);
   }
 
-  // Verifica se o usuário está autenticado
   if (authService.isAuthenticated()) {
     return true;
   }
 
-  // Redireciona para login se não autenticado
-  console.log("🔒 Acesso negado: usuário não autenticado. Redirecionando para login...");
-  return router.createUrlTree(["/auth/login"]);
+  console.log('🔒 Acesso negado: usuário não autenticado. Redirecionando para login...');
+  return router.createUrlTree(['/auth/login']);
 };
 
 /**
@@ -52,41 +50,14 @@ export const guestGuard: CanActivateFn = async (): Promise<boolean | UrlTree> =>
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  // Aguarda o carregamento inicial do estado de autenticação
   if (authService.authLoading()) {
-    await waitForAuthLoading(authService);
+    await waitForAuthReady(authService);
   }
 
-  // Se não autenticado, permite acesso à rota pública
   if (!authService.isAuthenticated()) {
     return true;
   }
 
-  // Redireciona para medicamentos se já autenticado
-  console.log("🔓 Usuário já autenticado. Redirecionando para medicamentos...");
-  return router.createUrlTree(["/medicamentos"]);
+  console.log('🔓 Usuário já autenticado. Redirecionando para medicamentos...');
+  return router.createUrlTree(['/medicamentos']);
 };
-
-/**
- * Aguarda o carregamento do estado de autenticação.
- * Usa polling simples para verificar quando authLoading se torna false.
- *
- * @param authService - Instância do AuthService
- * @param timeout - Tempo máximo de espera em ms (padrão: 5000)
- */
-async function waitForAuthLoading(
-  authService: AuthService,
-  timeout: number = 5000
-): Promise<void> {
-  const startTime = Date.now();
-
-  return new Promise((resolve) => {
-    const checkInterval = setInterval(() => {
-      if (!authService.authLoading() || Date.now() - startTime > timeout) {
-        clearInterval(checkInterval);
-        resolve();
-      }
-    }, 50);
-  });
-}
-
