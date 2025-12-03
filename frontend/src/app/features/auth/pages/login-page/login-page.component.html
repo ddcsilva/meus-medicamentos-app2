@@ -26,7 +26,7 @@
         autocomplete="email"
       />
       <span *ngIf="isFieldInvalid('email')" class="field-error">
-        {{ getFieldError("email") }}
+        {{ getFieldError('email') }}
       </span>
     </div>
 
@@ -45,16 +45,11 @@
         placeholder="Digite sua senha"
         autocomplete="current-password"
       />
-      <button
-        type="button"
-        class="toggle-password"
-        (click)="togglePasswordVisibility()"
-        tabindex="-1"
-      >
-        {{ showPassword() ? "🙈" : "👁️" }}
+      <button type="button" class="toggle-password" (click)="togglePasswordVisibility()" tabindex="-1">
+        {{ showPassword() ? '🙈' : '👁️' }}
       </button>
       <span *ngIf="isFieldInvalid('password')" class="field-error">
-        {{ getFieldError("password") }}
+        {{ getFieldError('password') }}
       </span>
     </div>
 
@@ -66,15 +61,13 @@
       [loading]="isLoading()"
       [disabled]="loginForm.invalid || isLoading()"
     >
-      {{ isLoading() ? "Entrando..." : "Entrar" }}
+      {{ isLoading() ? 'Entrando...' : 'Entrar' }}
     </app-button>
   </form>
 
   <!-- Informações adicionais -->
   <div class="login-footer">
-    <p class="help-text">
-      Esqueceu a senha? Entre em contato com o administrador.
-    </p>
+    <p class="help-text">Esqueceu a senha? Entre em contato com o administrador.</p>
   </div>
 </div>
 

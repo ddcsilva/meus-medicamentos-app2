@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, OnDestroy, signal } from "@angular/core";
+import { computed, inject, Injectable, OnDestroy, signal } from '@angular/core';
 import {
   Auth,
   AuthError,
@@ -7,7 +7,7 @@ import {
   signOut,
   User,
   UserCredential,
-} from "@angular/fire/auth";
+} from '@angular/fire/auth';
 
 /**
  * Interface para o resultado de operações de autenticação.
@@ -57,7 +57,7 @@ export interface LoginCredentials {
  * }
  */
 @Injectable({
-  providedIn: "root",
+  providedIn: 'root',
 })
 export class AuthService implements OnDestroy {
   private readonly _auth = inject(Auth);
@@ -68,34 +68,12 @@ export class AuthService implements OnDestroy {
   private readonly _authLoading = signal<boolean>(true);
   private readonly _authError = signal<AuthErrorInfo | null>(null);
 
-  /**
-   * Usuário autenticado atual (readonly signal).
-   */
   readonly currentUser = this._currentUser.asReadonly();
-
-  /**
-   * Indica se está carregando o estado de autenticação (readonly signal).
-   */
   readonly authLoading = this._authLoading.asReadonly();
-
-  /**
-   * Último erro de autenticação (readonly signal).
-   */
   readonly authError = this._authError.asReadonly();
 
-  /**
-   * Indica se há um usuário autenticado (computed signal).
-   */
   readonly isAuthenticated = computed(() => this._currentUser() !== null);
-
-  /**
-   * UID do usuário atual (computed signal).
-   */
   readonly userId = computed(() => this._currentUser()?.uid ?? null);
-
-  /**
-   * Email do usuário atual (computed signal).
-   */
   readonly userEmail = computed(() => this._currentUser()?.email ?? null);
 
   constructor() {
@@ -103,7 +81,6 @@ export class AuthService implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Limpar listener do Firebase Auth
     if (this._authStateSubscription) {
       this._authStateSubscription();
     }
@@ -125,11 +102,11 @@ export class AuthService implements OnDestroy {
         }
       },
       (error) => {
-        console.error("Auth state error:", error);
+        console.error('Auth state error:', error);
         this._authLoading.set(false);
         this._authError.set({
-          code: "auth/state-error",
-          message: "Erro ao verificar estado de autenticação",
+          code: 'auth/state-error',
+          message: 'Erro ao verificar estado de autenticação',
         });
       }
     );
@@ -140,14 +117,6 @@ export class AuthService implements OnDestroy {
    *
    * @param credentials - Credenciais de login (email e password)
    * @returns Promise com resultado da operação
-   *
-   * @example
-   * const result = await this.auth.login({ email: 'user@example.com', password: '123456' });
-   * if (result.success) {
-   *   console.log('Login realizado!', result.user);
-   * } else {
-   *   console.error('Erro:', result.error?.message);
-   * }
    */
   async login(credentials: LoginCredentials): Promise<AuthResult> {
     this._authLoading.set(true);
@@ -184,12 +153,6 @@ export class AuthService implements OnDestroy {
    * Realiza logout do usuário atual.
    *
    * @returns Promise com resultado da operação
-   *
-   * @example
-   * const result = await this.auth.logout();
-   * if (result.success) {
-   *   console.log('Logout realizado!');
-   * }
    */
   async logout(): Promise<AuthResult> {
     this._authLoading.set(true);
@@ -228,12 +191,6 @@ export class AuthService implements OnDestroy {
    *
    * @param forceRefresh - Se deve forçar a renovação do token
    * @returns Promise com o token ou null se não autenticado
-   *
-   * @example
-   * const token = await this.auth.getIdToken();
-   * if (token) {
-   *   // Usar token para chamadas à API
-   * }
    */
   async getIdToken(forceRefresh: boolean = false): Promise<string | null> {
     const user = this._currentUser();
@@ -244,7 +201,7 @@ export class AuthService implements OnDestroy {
     try {
       return await user.getIdToken(forceRefresh);
     } catch (error) {
-      console.error("Erro ao obter token:", error);
+      console.error('Erro ao obter token:', error);
       return null;
     }
   }
@@ -257,25 +214,22 @@ export class AuthService implements OnDestroy {
    */
   private _mapAuthError(error: AuthError): AuthErrorInfo {
     const errorMessages: Record<string, string> = {
-      "auth/invalid-email": "E-mail inválido.",
-      "auth/user-disabled": "Esta conta foi desativada.",
-      "auth/user-not-found": "Usuário não encontrado.",
-      "auth/wrong-password": "Senha incorreta.",
-      "auth/invalid-credential":
-        "Credenciais inválidas. Verifique e-mail e senha.",
-      "auth/email-already-in-use": "Este e-mail já está em uso.",
-      "auth/weak-password": "A senha é muito fraca.",
-      "auth/operation-not-allowed": "Operação não permitida.",
-      "auth/too-many-requests":
-        "Muitas tentativas. Tente novamente mais tarde.",
-      "auth/network-request-failed": "Erro de conexão. Verifique sua internet.",
-      "auth/popup-closed-by-user": "Janela fechada pelo usuário.",
-      "auth/cancelled-popup-request": "Operação cancelada.",
-      "auth/internal-error": "Erro interno. Tente novamente.",
+      'auth/invalid-email': 'E-mail inválido.',
+      'auth/user-disabled': 'Esta conta foi desativada.',
+      'auth/user-not-found': 'Usuário não encontrado.',
+      'auth/wrong-password': 'Senha incorreta.',
+      'auth/invalid-credential': 'Credenciais inválidas. Verifique e-mail e senha.',
+      'auth/email-already-in-use': 'Este e-mail já está em uso.',
+      'auth/weak-password': 'A senha é muito fraca.',
+      'auth/operation-not-allowed': 'Operação não permitida.',
+      'auth/too-many-requests': 'Muitas tentativas. Tente novamente mais tarde.',
+      'auth/network-request-failed': 'Erro de conexão. Verifique sua internet.',
+      'auth/popup-closed-by-user': 'Janela fechada pelo usuário.',
+      'auth/cancelled-popup-request': 'Operação cancelada.',
+      'auth/internal-error': 'Erro interno. Tente novamente.',
     };
 
-    const message =
-      errorMessages[error.code] || "Erro de autenticação. Tente novamente.";
+    const message = errorMessages[error.code] || 'Erro de autenticação. Tente novamente.';
 
     return {
       code: error.code,

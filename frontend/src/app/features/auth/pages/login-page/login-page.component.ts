@@ -1,23 +1,18 @@
-import { CommonModule } from "@angular/common";
-import { Component, inject, signal } from "@angular/core";
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from "@angular/forms";
-import { Router } from "@angular/router";
-import { AuthService } from "../../../../core/services/auth.service";
-import { NotificationService } from "../../../../core/services/notification.service";
-import { ButtonComponent } from "../../../../shared/ui/button/button.component";
-import { ToastComponent } from "../../../../shared/ui/toast/toast.component";
+import { CommonModule } from '@angular/common';
+import { Component, inject, signal } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
+import { NotificationService } from '../../../../core/services/notification.service';
+import { ButtonComponent } from '../../../../shared/ui/button/button.component';
+import { ToastComponent } from '../../../../shared/ui/toast/toast.component';
 
 @Component({
-  selector: "app-login-page",
+  selector: 'app-login-page',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, ButtonComponent, ToastComponent],
-  templateUrl: "./login-page.component.html",
-  styleUrls: ["./login-page.component.scss"],
+  templateUrl: './login-page.component.html',
+  styleUrls: ['./login-page.component.scss'],
 })
 export class LoginPageComponent {
   private readonly authService = inject(AuthService);
@@ -25,15 +20,13 @@ export class LoginPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly notification = inject(NotificationService);
 
-  // Signals para estado local
   readonly isLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly showPassword = signal(false);
 
-  // Formulário reativo
   readonly loginForm: FormGroup = this.fb.group({
-    email: ["", [Validators.required, Validators.email]],
-    password: ["", [Validators.required, Validators.minLength(6)]],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
   });
 
   /**
@@ -58,31 +51,28 @@ export class LoginPageComponent {
     const field = this.loginForm.get(fieldName);
 
     if (!field || !field.errors) {
-      return "";
+      return '';
     }
 
-    if (field.errors["required"]) {
-      return fieldName === "email"
-        ? "E-mail é obrigatório."
-        : "Senha é obrigatória.";
+    if (field.errors['required']) {
+      return fieldName === 'email' ? 'E-mail é obrigatório.' : 'Senha é obrigatória.';
     }
 
-    if (field.errors["email"]) {
-      return "Digite um e-mail válido.";
+    if (field.errors['email']) {
+      return 'Digite um e-mail válido.';
     }
 
-    if (field.errors["minlength"]) {
-      return `Mínimo de ${field.errors["minlength"].requiredLength} caracteres.`;
+    if (field.errors['minlength']) {
+      return `Mínimo de ${field.errors['minlength'].requiredLength} caracteres.`;
     }
 
-    return "Campo inválido.";
+    return 'Campo inválido.';
   }
 
   /**
    * Submete o formulário de login.
    */
   async onSubmit(): Promise<void> {
-    // Marca todos os campos como tocados para exibir erros
     this.loginForm.markAllAsTouched();
 
     if (this.loginForm.invalid) {
@@ -98,24 +88,19 @@ export class LoginPageComponent {
       const result = await this.authService.login({ email, password });
 
       if (result.success) {
-        // Login bem-sucedido - notifica e redireciona
-        this.notification.success("Login realizado com sucesso!", {
-          title: "Bem-vindo!",
+        this.notification.success('Login realizado com sucesso!', {
+          title: 'Bem-vindo!',
           duration: 3000,
         });
-        await this.router.navigate(["/medicamentos"]);
+        await this.router.navigate(['/medicamentos']);
       } else {
-        // Exibe mensagem de erro
-        const errorMsg =
-          result.error?.message || "Erro ao fazer login. Tente novamente.";
+        const errorMsg = result.error?.message || 'Erro ao fazer login. Tente novamente.';
         this.errorMessage.set(errorMsg);
-        this.notification.error(errorMsg);
       }
     } catch (error) {
-      console.error("Erro inesperado no login:", error);
-      const errorMsg = "Erro inesperado. Tente novamente.";
+      console.error('Erro inesperado no login:', error);
+      const errorMsg = 'Erro inesperado. Tente novamente.';
       this.errorMessage.set(errorMsg);
-      this.notification.error(errorMsg);
     } finally {
       this.isLoading.set(false);
     }

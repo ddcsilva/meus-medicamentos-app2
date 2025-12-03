@@ -1,29 +1,21 @@
-import { Injectable, signal, computed } from "@angular/core";
+import { computed, Injectable, signal } from '@angular/core';
 
 /**
  * Tipos de notificação.
  */
-export type NotificationType = "success" | "error" | "warning" | "info";
+export type NotificationType = 'success' | 'error' | 'warning' | 'info';
 
 /**
  * Interface para uma notificação.
  */
 export interface Notification {
-  /** ID único */
   id: string;
-  /** Tipo da notificação */
   type: NotificationType;
-  /** Mensagem principal */
   message: string;
-  /** Título opcional */
   title?: string;
-  /** Duração em ms (0 = não auto-dismiss) */
   duration: number;
-  /** Se pode ser fechada pelo usuário */
   dismissible: boolean;
-  /** Timestamp de criação */
   createdAt: number;
-  /** Ação opcional */
   action?: {
     label: string;
     callback: () => void;
@@ -34,13 +26,9 @@ export interface Notification {
  * Opções para criar uma notificação.
  */
 export interface NotificationOptions {
-  /** Título opcional */
   title?: string;
-  /** Duração em ms (padrão: 5000, 0 = não auto-dismiss) */
   duration?: number;
-  /** Se pode ser fechada pelo usuário (padrão: true) */
   dismissible?: boolean;
-  /** Ação opcional */
   action?: {
     label: string;
     callback: () => void;
@@ -79,85 +67,57 @@ const DEFAULT_DURATIONS: Record<NotificationType, number> = {
  * });
  */
 @Injectable({
-  providedIn: "root",
+  providedIn: 'root',
 })
 export class NotificationService {
-  /** Lista de notificações ativas */
   private readonly _notifications = signal<Notification[]>([]);
-
-  /** Máximo de notificações simultâneas */
   private readonly MAX_NOTIFICATIONS = 5;
-
-  /** Contador para IDs únicos */
   private _idCounter = 0;
 
-  // ========================================
-  // SIGNALS PÚBLICOS
-  // ========================================
-
-  /** Lista de notificações ativas (readonly) */
   readonly notifications = this._notifications.asReadonly();
-
-  /** Indica se há notificações ativas */
   readonly hasNotifications = computed(() => this._notifications().length > 0);
-
-  /** Contagem de notificações */
   readonly notificationCount = computed(() => this._notifications().length);
-
-  // ========================================
-  // MÉTODOS PÚBLICOS - CRIAR NOTIFICAÇÕES
-  // ========================================
 
   /**
    * Exibe uma notificação de sucesso.
    */
   success(message: string, options?: NotificationOptions): string {
-    return this._show("success", message, options);
+    return this._show('success', message, options);
   }
 
   /**
    * Exibe uma notificação de erro.
    */
   error(message: string, options?: NotificationOptions): string {
-    return this._show("error", message, options);
+    return this._show('error', message, options);
   }
 
   /**
    * Exibe uma notificação de aviso.
    */
   warning(message: string, options?: NotificationOptions): string {
-    return this._show("warning", message, options);
+    return this._show('warning', message, options);
   }
 
   /**
    * Exibe uma notificação informativa.
    */
   info(message: string, options?: NotificationOptions): string {
-    return this._show("info", message, options);
+    return this._show('info', message, options);
   }
 
   /**
    * Exibe uma notificação genérica.
    */
-  show(
-    type: NotificationType,
-    message: string,
-    options?: NotificationOptions
-  ): string {
+  show(type: NotificationType, message: string, options?: NotificationOptions): string {
     return this._show(type, message, options);
   }
-
-  // ========================================
-  // MÉTODOS PÚBLICOS - GERENCIAR
-  // ========================================
 
   /**
    * Remove uma notificação pelo ID.
    */
   dismiss(id: string): void {
-    this._notifications.update((notifications) =>
-      notifications.filter((n) => n.id !== id)
-    );
+    this._notifications.update((notifications) => notifications.filter((n) => n.id !== id));
   }
 
   /**
@@ -171,23 +131,13 @@ export class NotificationService {
    * Remove notificações por tipo.
    */
   dismissByType(type: NotificationType): void {
-    this._notifications.update((notifications) =>
-      notifications.filter((n) => n.type !== type)
-    );
+    this._notifications.update((notifications) => notifications.filter((n) => n.type !== type));
   }
-
-  // ========================================
-  // MÉTODOS PRIVADOS
-  // ========================================
 
   /**
    * Cria e exibe uma notificação.
    */
-  private _show(
-    type: NotificationType,
-    message: string,
-    options?: NotificationOptions
-  ): string {
+  private _show(type: NotificationType, message: string, options?: NotificationOptions): string {
     const id = this._generateId();
     const duration = options?.duration ?? DEFAULT_DURATIONS[type];
 
@@ -202,17 +152,14 @@ export class NotificationService {
       action: options?.action,
     };
 
-    // Adiciona à lista (limitando ao máximo)
     this._notifications.update((notifications) => {
       const updated = [...notifications, notification];
-      // Remove as mais antigas se exceder o limite
       if (updated.length > this.MAX_NOTIFICATIONS) {
         return updated.slice(-this.MAX_NOTIFICATIONS);
       }
       return updated;
     });
 
-    // Auto-dismiss após a duração
     if (duration > 0) {
       setTimeout(() => {
         this.dismiss(id);
@@ -229,4 +176,3 @@ export class NotificationService {
     return `notification-${++this._idCounter}-${Date.now()}`;
   }
 }
-
