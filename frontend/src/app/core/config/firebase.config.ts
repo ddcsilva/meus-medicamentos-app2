@@ -62,7 +62,7 @@ export function validateFirebaseConfig(): boolean {
   }
 
   if (!environment.production) {
-    console.log("✅ Firebase configuration validated successfully");
+    console.log("Configuração do Firebase validada com sucesso");
   }
 
   return true;
