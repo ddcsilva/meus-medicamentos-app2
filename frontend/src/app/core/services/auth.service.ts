@@ -224,6 +224,32 @@ export class AuthService implements OnDestroy {
   }
 
   /**
+   * Obtém o token ID do usuário atual.
+   *
+   * @param forceRefresh - Se deve forçar a renovação do token
+   * @returns Promise com o token ou null se não autenticado
+   *
+   * @example
+   * const token = await this.auth.getIdToken();
+   * if (token) {
+   *   // Usar token para chamadas à API
+   * }
+   */
+  async getIdToken(forceRefresh: boolean = false): Promise<string | null> {
+    const user = this._currentUser();
+    if (!user) {
+      return null;
+    }
+
+    try {
+      return await user.getIdToken(forceRefresh);
+    } catch (error) {
+      console.error("Erro ao obter token:", error);
+      return null;
+    }
+  }
+
+  /**
    * Mapeia erros do Firebase Auth para mensagens amigáveis.
    *
    * @param error - Erro do Firebase Auth

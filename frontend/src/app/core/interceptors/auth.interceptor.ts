@@ -1,7 +1,7 @@
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn } from "@angular/common/http";
 import { inject } from "@angular/core";
-import { from, switchMap, catchError, of } from "rxjs";
-import { Auth } from "@angular/fire/auth";
+import { from, switchMap, catchError, of, first, filter, timeout } from "rxjs";
+import { Auth, authState } from "@angular/fire/auth";
 import { environment } from "../../../environments/environment";
 
 /**
@@ -30,25 +30,39 @@ export const authInterceptor: HttpInterceptorFn = (
     return next(req);
   }
 
-  // Se não há usuário autenticado, continua sem token
-  const currentUser = auth.currentUser;
-  if (!currentUser) {
-    return next(req);
-  }
+  // Aguarda o estado de autenticação estar disponível
+  return authState(auth).pipe(
+    // Aguarda até ter um valor definido (não undefined)
+    first(),
+    // Timeout de 5 segundos para não travar a requisição
+    timeout(5000),
+    switchMap((user) => {
+      // Se não há usuário autenticado, continua sem token
+      if (!user) {
+        console.warn("[AuthInterceptor] Usuário não autenticado, requisição sem token");
+        return next(req);
+      }
 
-  // Obtém o token ID do usuário e adiciona ao header
-  return from(currentUser.getIdToken()).pipe(
-    switchMap((token) => {
-      const authReq = req.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      return next(authReq);
+      // Obtém o token ID do usuário e adiciona ao header
+      return from(user.getIdToken()).pipe(
+        switchMap((token) => {
+          const authReq = req.clone({
+            setHeaders: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          return next(authReq);
+        }),
+        catchError((error) => {
+          console.error("[AuthInterceptor] Erro ao obter token:", error);
+          // Continua sem token em caso de erro
+          return next(req);
+        })
+      );
     }),
     catchError((error) => {
-      console.error("[AuthInterceptor] Erro ao obter token:", error);
-      // Continua sem token em caso de erro
+      console.error("[AuthInterceptor] Erro no interceptor:", error);
+      // Continua sem token em caso de erro ou timeout
       return next(req);
     })
   );
@@ -64,4 +78,3 @@ function isApiRequest(url: string): boolean {
   // Verifica se a URL começa com a base URL da API
   return url.startsWith(environment.apiBaseUrl);
 }
-
