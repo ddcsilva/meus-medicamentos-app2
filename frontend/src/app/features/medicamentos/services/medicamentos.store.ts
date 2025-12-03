@@ -1,16 +1,16 @@
-import { Injectable, inject, signal, computed } from "@angular/core";
+import { Injectable, computed, inject, signal } from "@angular/core";
 import { firstValueFrom } from "rxjs";
+import { ApiError } from "../../../core/api/api.service";
+import {
+  CreateMedicamentoDto,
+  Medicamento,
+  StatusValidade,
+  UpdateMedicamentoDto,
+} from "../models";
 import {
   MedicamentosApiService,
   MedicamentosFilter,
 } from "./medicamentos-api.service";
-import {
-  Medicamento,
-  CreateMedicamentoDto,
-  UpdateMedicamentoDto,
-  StatusValidade,
-} from "../models";
-import { ApiError } from "../../../core/api/api.service";
 
 /**
  * Interface para o estado de erro.
@@ -586,4 +586,3 @@ export class MedicamentosStore {
     console.error(`[MedicamentosStore] Erro em ${action}:`, error);
   }
 }
-
