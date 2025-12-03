@@ -3,4 +3,4 @@
  */
 
 export * from "./health.controller";
-
+export * from "./medicamentos.controller";

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import healthRoutes from "./health.routes";
+import medicamentosRoutes from "./medicamentos.routes";
 
 /**
  * Router principal que agrega todas as rotas da API.
@@ -14,15 +15,16 @@ const router = Router();
 router.use("/health", healthRoutes);
 
 /**
- * Rotas de medicamentos (a serem implementadas).
- * GET    /medicamentos
- * GET    /medicamentos/:id
- * POST   /medicamentos
- * PUT    /medicamentos/:id
- * PATCH  /medicamentos/:id/quantidade
- * DELETE /medicamentos/:id
+ * Rotas de medicamentos (protegidas por autenticação).
+ *
+ * GET    /medicamentos              - Lista medicamentos
+ * GET    /medicamentos/estatisticas - Estatísticas
+ * GET    /medicamentos/:id          - Busca por ID
+ * POST   /medicamentos              - Cria medicamento
+ * PUT    /medicamentos/:id          - Atualiza medicamento
+ * PATCH  /medicamentos/:id/quantidade - Atualiza quantidade
+ * DELETE /medicamentos/:id          - Remove medicamento
  */
-// router.use("/medicamentos", medicamentosRoutes);
+router.use("/medicamentos", medicamentosRoutes);
 
 export default router;
-
