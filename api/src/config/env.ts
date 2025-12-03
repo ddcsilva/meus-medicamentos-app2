@@ -66,6 +66,26 @@ export const env = {
      * Email do cliente (alternativa ao arquivo).
      */
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+
+    /**
+     * Storage bucket (opcional, derivado do projectId se não fornecido).
+     */
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+
+    /**
+     * Se deve usar o emulador do Firebase.
+     */
+    useEmulator: process.env.FIREBASE_USE_EMULATOR === "true",
+
+    /**
+     * Host do emulador do Firestore.
+     */
+    firestoreEmulatorHost: process.env.FIRESTORE_EMULATOR_HOST,
+
+    /**
+     * Host do emulador do Auth.
+     */
+    authEmulatorHost: process.env.FIREBASE_AUTH_EMULATOR_HOST,
   },
 };
 
