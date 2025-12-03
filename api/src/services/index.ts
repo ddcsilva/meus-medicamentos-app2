@@ -5,6 +5,25 @@
  * Eles orquestram operações entre controllers e repositories.
  */
 
-// Export services aqui quando implementados
-// export * from "./medicamentos.service";
+// Erros de serviço
+export {
+  ServiceError,
+  ValidationError,
+  BusinessRuleError,
+  UnauthorizedError,
+  ForbiddenError,
+  isServiceError,
+  isValidationError,
+} from "./errors";
+export type { ServiceErrorCode } from "./errors";
 
+// Serviço de medicamentos
+export {
+  MedicamentosService,
+  getMedicamentosService,
+  setMedicamentosService,
+} from "./medicamentos.service";
+export type {
+  IMedicamentosService,
+  MedicamentosEstatisticas,
+} from "./medicamentos.service";
