@@ -1,0 +1,20 @@
+/**
+ * Barrel file para exportar todos os componentes de UI
+ */
+
+// Button
+export * from './button/button.component';
+
+// Card
+export * from './card/card.component';
+
+// Badge
+export * from './badge/badge.component';
+export * from './status-badge/status-badge.component';
+
+// Input
+export * from './input/input.component';
+
+// Loading
+export * from './loading/loading.component';
+
