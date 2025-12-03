@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { MedicamentosController } from "../controllers/medicamentos.controller";
-import { authMiddleware } from "../middlewares";
+import { authMiddleware, uploadImage } from "../middlewares";
 
 /**
  * Router para rotas de medicamentos.
@@ -155,6 +155,35 @@ router.patch("/:id/quantidade", MedicamentosController.atualizarQuantidade);
  * @throws 404 - Medicamento não encontrado
  */
 router.delete("/:id", MedicamentosController.remover);
+
+/**
+ * POST /medicamentos/:id/foto
+ *
+ * Faz upload de uma foto para o medicamento.
+ *
+ * @param id - ID do medicamento
+ *
+ * Body: multipart/form-data com campo 'foto'
+ *
+ * @returns {MedicamentoResponseDto} Medicamento atualizado com fotoUrl
+ *
+ * @throws 400 - Arquivo inválido ou não enviado
+ * @throws 404 - Medicamento não encontrado
+ */
+router.post("/:id/foto", uploadImage, MedicamentosController.uploadFoto);
+
+/**
+ * DELETE /medicamentos/:id/foto
+ *
+ * Remove a foto de um medicamento.
+ *
+ * @param id - ID do medicamento
+ *
+ * @returns {MedicamentoResponseDto} Medicamento atualizado sem foto
+ *
+ * @throws 404 - Medicamento não encontrado
+ */
+router.delete("/:id/foto", MedicamentosController.removerFoto);
 
 export default router;
 

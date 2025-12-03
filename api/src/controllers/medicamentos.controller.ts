@@ -213,6 +213,80 @@ export class MedicamentosController {
     }
   }
 
+  /**
+   * Faz upload de foto para um medicamento.
+   *
+   * POST /medicamentos/:id/foto
+   */
+  static async uploadFoto(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const userId = req.user!.uid;
+      const { id } = req.params;
+
+      if (!req.file) {
+        res.status(400).json({
+          success: false,
+          error: {
+            code: "NO_FILE",
+            message: "Nenhum arquivo enviado. Use o campo 'foto'.",
+          },
+        });
+        return;
+      }
+
+      const service = getMedicamentosService();
+      const medicamento = await service.uploadFoto(
+        id,
+        {
+          buffer: req.file.buffer,
+          originalname: req.file.originalname,
+          mimetype: req.file.mimetype,
+          size: req.file.size,
+        },
+        userId
+      );
+
+      res.status(200).json({
+        success: true,
+        data: medicamento,
+        message: "Foto enviada com sucesso",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Remove a foto de um medicamento.
+   *
+   * DELETE /medicamentos/:id/foto
+   */
+  static async removerFoto(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const userId = req.user!.uid;
+      const { id } = req.params;
+
+      const service = getMedicamentosService();
+      const medicamento = await service.removerFoto(id, userId);
+
+      res.status(200).json({
+        success: true,
+        data: medicamento,
+        message: "Foto removida com sucesso",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   // ============================================================================
   // Métodos auxiliares
   // ============================================================================

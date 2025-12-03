@@ -13,6 +13,26 @@ import {
 } from "../models";
 
 /**
+ * Interface para resposta padrão da API.
+ */
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+/**
+ * Interface para resposta de lista da API.
+ */
+interface ApiListResponse {
+  success: boolean;
+  data: {
+    items: MedicamentoResponseDto[];
+    total: number;
+  };
+}
+
+/**
  * Interface para filtros de listagem de medicamentos.
  */
 export interface MedicamentosFilter {
@@ -86,8 +106,10 @@ export class MedicamentosApiService {
     const params = this.buildFilterParams(filtros);
 
     return this.api
-      .get<MedicamentoResponseDto[]>(this.endpoint, { params })
-      .pipe(map((response) => response.map(mapResponseToMedicamento)));
+      .get<ApiListResponse>(this.endpoint, { params })
+      .pipe(
+        map((response) => response.data.items.map(mapResponseToMedicamento))
+      );
   }
 
   /**
@@ -103,8 +125,8 @@ export class MedicamentosApiService {
    */
   getById(id: string): Observable<Medicamento> {
     return this.api
-      .get<MedicamentoResponseDto>(`${this.endpoint}/${id}`)
-      .pipe(map(mapResponseToMedicamento));
+      .get<ApiResponse<MedicamentoResponseDto>>(`${this.endpoint}/${id}`)
+      .pipe(map((response) => mapResponseToMedicamento(response.data)));
   }
 
   /**
@@ -132,8 +154,8 @@ export class MedicamentosApiService {
    */
   create(dto: CreateMedicamentoDto): Observable<Medicamento> {
     return this.api
-      .post<MedicamentoResponseDto>(this.endpoint, dto)
-      .pipe(map(mapResponseToMedicamento));
+      .post<ApiResponse<MedicamentoResponseDto>>(this.endpoint, dto)
+      .pipe(map((response) => mapResponseToMedicamento(response.data)));
   }
 
   /**
@@ -153,8 +175,8 @@ export class MedicamentosApiService {
    */
   update(id: string, dto: UpdateMedicamentoDto): Observable<Medicamento> {
     return this.api
-      .put<MedicamentoResponseDto>(`${this.endpoint}/${id}`, dto)
-      .pipe(map(mapResponseToMedicamento));
+      .put<ApiResponse<MedicamentoResponseDto>>(`${this.endpoint}/${id}`, dto)
+      .pipe(map((response) => mapResponseToMedicamento(response.data)));
   }
 
   /**
@@ -176,8 +198,11 @@ export class MedicamentosApiService {
     const dto: UpdateQuantidadeDto = { quantidadeAtual: quantidade };
 
     return this.api
-      .patch<MedicamentoResponseDto>(`${this.endpoint}/${id}/quantidade`, dto)
-      .pipe(map(mapResponseToMedicamento));
+      .patch<ApiResponse<MedicamentoResponseDto>>(
+        `${this.endpoint}/${id}/quantidade`,
+        dto
+      )
+      .pipe(map((response) => mapResponseToMedicamento(response.data)));
   }
 
   /**
@@ -246,19 +271,29 @@ export class MedicamentosApiService {
    *
    * @param id - ID do medicamento
    * @param file - Arquivo de imagem
-   * @returns Observable com a URL da foto
+   * @returns Observable com o medicamento atualizado
    *
    * @example
-   * this.medicamentosApi.uploadFoto('abc123', file).subscribe(response => {
-   *   console.log('URL da foto:', response.fotoUrl);
+   * this.medicamentosApi.uploadFoto('abc123', file).subscribe(medicamento => {
+   *   console.log('URL da foto:', medicamento.fotoUrl);
    * });
    */
-  uploadFoto(id: string, file: File): Observable<{ fotoUrl: string }> {
-    return this.api.upload<{ fotoUrl: string }>(
-      `${this.endpoint}/${id}/foto`,
-      file,
-      "foto"
-    );
+  uploadFoto(id: string, file: File): Observable<Medicamento> {
+    return this.api
+      .upload<MedicamentoResponseDto>(`${this.endpoint}/${id}/foto`, file, "foto")
+      .pipe(map(mapResponseToMedicamento));
+  }
+
+  /**
+   * Remove a foto de um medicamento.
+   *
+   * @param id - ID do medicamento
+   * @returns Observable com o medicamento atualizado
+   */
+  removeFoto(id: string): Observable<Medicamento> {
+    return this.api
+      .delete<ApiResponse<MedicamentoResponseDto>>(`${this.endpoint}/${id}/foto`)
+      .pipe(map((response) => mapResponseToMedicamento(response.data)));
   }
 
   /**

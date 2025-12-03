@@ -6,7 +6,7 @@ import {
   HttpParams,
 } from "@angular/common/http";
 import { Observable, throwError } from "rxjs";
-import { catchError } from "rxjs/operators";
+import { catchError, map } from "rxjs/operators";
 import { environment } from "../../../environments/environment";
 
 /**
@@ -392,7 +392,19 @@ export class ApiService {
     }
 
     return this.http
-      .post<T>(this.buildUrl(endpoint), formData)
-      .pipe(catchError((error) => this.handleError(error)));
+      .post<ApiResponse<T>>(this.buildUrl(endpoint), formData)
+      .pipe(
+        map((response) => response.data),
+        catchError((error) => this.handleError(error))
+      );
   }
+}
+
+/**
+ * Interface para resposta padrão da API.
+ */
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
 }

@@ -26,4 +26,5 @@ export {
 export type {
   IMedicamentosService,
   MedicamentosEstatisticas,
+  UploadedFile,
 } from "./medicamentos.service";

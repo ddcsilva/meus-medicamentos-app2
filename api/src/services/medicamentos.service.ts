@@ -17,6 +17,7 @@ import {
   NotFoundError,
   isRepositoryError,
 } from "../repositories";
+import { uploadBuffer, deleteFile } from "../firebase";
 import { ServiceError, ValidationError } from "./errors";
 
 /**
@@ -41,9 +42,25 @@ export interface IMedicamentosService {
     dto: UpdateQuantidadeDto,
     userId: string
   ): Promise<MedicamentoResponseDto>;
+  uploadFoto(
+    id: string,
+    file: UploadedFile,
+    userId: string
+  ): Promise<MedicamentoResponseDto>;
+  removerFoto(id: string, userId: string): Promise<MedicamentoResponseDto>;
   remover(id: string, userId: string): Promise<void>;
   contarPorUsuario(userId: string): Promise<number>;
   obterEstatisticas(userId: string): Promise<MedicamentosEstatisticas>;
+}
+
+/**
+ * Interface para arquivo de upload.
+ */
+export interface UploadedFile {
+  buffer: Buffer;
+  originalname: string;
+  mimetype: string;
+  size: number;
 }
 
 /**
@@ -310,6 +327,119 @@ export class MedicamentosService implements IMedicamentosService {
       return estatisticas;
     } catch (error) {
       throw this.handleError(error, "obter estatísticas");
+    }
+  }
+
+  /**
+   * Faz upload de foto para um medicamento.
+   *
+   * @param id - ID do medicamento
+   * @param file - Arquivo de imagem
+   * @param userId - UID do usuário
+   * @returns Medicamento atualizado com a URL da foto
+   */
+  async uploadFoto(
+    id: string,
+    file: UploadedFile,
+    userId: string
+  ): Promise<MedicamentoResponseDto> {
+    try {
+      this.validarId(id);
+
+      // Verifica se o medicamento existe e pertence ao usuário
+      const medicamento = await this.repository.findById(id, userId);
+      if (!medicamento) {
+        throw new NotFoundError("Medicamento não encontrado");
+      }
+
+      // Gera o caminho do arquivo no Storage
+      const ext = file.originalname.split(".").pop()?.toLowerCase() || "jpg";
+      const filename = `medicamentos/${userId}/${id}/foto.${ext}`;
+
+      // Remove foto anterior se existir
+      if (medicamento.fotoUrl) {
+        try {
+          const oldPath = this.extractStoragePath(medicamento.fotoUrl);
+          if (oldPath) {
+            await deleteFile(oldPath);
+          }
+        } catch {
+          // Ignora erro ao remover foto antiga
+          console.warn("[MedicamentosService] Erro ao remover foto antiga");
+        }
+      }
+
+      // Faz upload para o Storage
+      const fotoUrl = await uploadBuffer(file.buffer, filename, {
+        contentType: file.mimetype,
+        public: true,
+      });
+
+      // Atualiza o medicamento com a nova URL
+      const atualizado = await this.repository.update(
+        id,
+        { fotoUrl },
+        userId
+      );
+
+      return medicamentoToResponseDto(atualizado);
+    } catch (error) {
+      throw this.handleError(error, "fazer upload de foto");
+    }
+  }
+
+  /**
+   * Remove a foto de um medicamento.
+   *
+   * @param id - ID do medicamento
+   * @param userId - UID do usuário
+   * @returns Medicamento atualizado sem foto
+   */
+  async removerFoto(id: string, userId: string): Promise<MedicamentoResponseDto> {
+    try {
+      this.validarId(id);
+
+      // Verifica se o medicamento existe e pertence ao usuário
+      const medicamento = await this.repository.findById(id, userId);
+      if (!medicamento) {
+        throw new NotFoundError("Medicamento não encontrado");
+      }
+
+      // Remove foto do Storage se existir
+      if (medicamento.fotoUrl) {
+        try {
+          const storagePath = this.extractStoragePath(medicamento.fotoUrl);
+          if (storagePath) {
+            await deleteFile(storagePath);
+          }
+        } catch {
+          console.warn("[MedicamentosService] Erro ao remover foto do Storage");
+        }
+      }
+
+      // Atualiza o medicamento removendo a URL
+      const atualizado = await this.repository.update(
+        id,
+        { fotoUrl: "" },
+        userId
+      );
+
+      return medicamentoToResponseDto(atualizado);
+    } catch (error) {
+      throw this.handleError(error, "remover foto");
+    }
+  }
+
+  /**
+   * Extrai o caminho do Storage de uma URL pública.
+   */
+  private extractStoragePath(url: string): string | null {
+    try {
+      // URL formato: https://storage.googleapis.com/bucket/path/to/file
+      const match = url.match(/storage\.googleapis\.com\/[^/]+\/(.+)$/);
+      return match ? match[1] : null;
+    } catch {
+      return null;
     }
   }
 
