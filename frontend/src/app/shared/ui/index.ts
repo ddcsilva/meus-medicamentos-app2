@@ -2,6 +2,9 @@
  * Barrel file para exportar todos os componentes de UI
  */
 
+// Icon
+export * from './icon/icon.component';
+
 // Button
 export * from './button/button.component';
 
@@ -23,4 +26,7 @@ export * from './page-loading/page-loading.component';
 export * from './toast/toast.component';
 export * from './empty-state/empty-state.component';
 export * from './error-alert/error-alert.component';
+export * from './confirm-modal/confirm-modal.component';
 
+// Theme
+export * from './theme-toggle/theme-toggle.component';

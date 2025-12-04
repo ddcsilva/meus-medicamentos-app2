@@ -8,129 +8,87 @@
 
 h2 {
   font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   color: var(--color-text-primary);
   margin: 0 0 var(--spacing-xs) 0;
   text-align: center;
+  letter-spacing: -0.025em;
 }
 
 .login-subtitle {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   text-align: center;
-  margin: 0 0 var(--spacing-lg) 0;
+  margin: 0 0 var(--spacing-xl) 0;
 }
 
-/* Alerta de erro */
+/* Error Alert */
 .error-alert {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--spacing-sm);
   padding: var(--spacing-md);
   background-color: var(--color-danger-bg);
   border: 1px solid var(--color-danger-light);
-  border-radius: var(--border-radius-md);
+  border-radius: var(--border-radius-lg);
   margin-bottom: var(--spacing-lg);
-  color: var(--color-vencido-text);
+  color: var(--color-danger-text);
   font-size: var(--font-size-sm);
+  animation: shake 0.3s ease-out;
+
+  app-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--color-danger);
+  }
 }
 
-.error-icon {
-  font-size: var(--font-size-lg);
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
 }
 
-/* Formulário */
+/* Form */
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  position: relative;
-}
-
-.form-label {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
-}
-
-.required {
-  color: var(--color-danger);
-  margin-left: 2px;
-}
-
-.form-input {
-  width: 100%;
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-family: inherit;
-  font-size: var(--font-size-base);
-  color: var(--color-text-primary);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-md);
-  transition: all var(--transition-fast);
-
-  &::placeholder {
-    color: var(--color-text-hint);
-  }
-
-  &:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
-  }
-
-  &.has-error {
-    border-color: var(--color-danger);
-
-    &:focus {
-      box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
-    }
-  }
-}
-
-.toggle-password {
-  position: absolute;
-  right: var(--spacing-md);
-  top: 50%;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: var(--font-size-base);
-  padding: 0;
-  opacity: 0.6;
-  transition: opacity var(--transition-fast);
-
-  &:hover {
-    opacity: 1;
-  }
-}
-
-.field-error {
-  font-size: var(--font-size-xs);
-  color: var(--color-danger);
+  gap: var(--spacing-lg);
 }
 
 /* Footer */
 .login-footer {
-  margin-top: var(--spacing-lg);
+  margin-top: var(--spacing-xl);
   text-align: center;
 }
 
 .help-text {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
   font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+  color: var(--color-text-hint);
   margin: 0;
+
+  app-icon {
+    color: var(--color-text-hint);
+  }
 }
 
-/* Responsividade */
+/* Responsiveness */
 @media (max-width: 639px) {
   h2 {
     font-size: var(--font-size-lg);
+  }
+
+  .login-form {
+    gap: var(--spacing-md);
   }
 }

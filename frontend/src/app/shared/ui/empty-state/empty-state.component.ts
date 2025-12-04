@@ -1,50 +1,32 @@
-import { Component, EventEmitter, Input, Output } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { ButtonComponent } from "../button/button.component";
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ButtonComponent } from '../button/button.component';
+import { IconComponent } from '../icon/icon.component';
 
 /**
  * Variantes de estado vazio.
  */
 export type EmptyStateVariant =
-  | "default"
-  | "search"
-  | "error"
-  | "no-data"
-  | "offline";
+  | 'default'
+  | 'search'
+  | 'error'
+  | 'no-data'
+  | 'offline';
 
 /**
  * Componente de estado vazio.
  *
  * Exibe uma mensagem amigável quando não há dados para mostrar.
- *
- * @example
- * // Estado vazio padrão
- * <app-empty-state
- *   icon="💊"
- *   title="Nenhum medicamento cadastrado"
- *   description="Comece adicionando seu primeiro medicamento."
- *   actionLabel="Adicionar Medicamento"
- *   (action)="adicionarMedicamento()"
- * />
- *
- * // Estado de busca sem resultados
- * <app-empty-state
- *   variant="search"
- *   title="Nenhum resultado encontrado"
- *   description="Tente alterar os termos de busca."
- *   actionLabel="Limpar Busca"
- *   (action)="limparBusca()"
- * />
  */
 @Component({
-  selector: "app-empty-state",
+  selector: 'app-empty-state',
   standalone: true,
-  imports: [CommonModule, ButtonComponent],
+  imports: [CommonModule, ButtonComponent, IconComponent],
   template: `
     <div class="empty-state" [class]="'empty-state--' + variant">
       <!-- Ícone -->
-      <div class="empty-icon" aria-hidden="true">
-        {{ icon || getDefaultIcon() }}
+      <div class="empty-icon-wrapper" aria-hidden="true">
+        <app-icon [name]="iconName || getDefaultIcon()" [size]="48" />
       </div>
 
       <!-- Título -->
@@ -55,23 +37,25 @@ export type EmptyStateVariant =
         {{ description }}
       </p>
 
-      <!-- Ação principal -->
-      <app-button
-        *ngIf="actionLabel"
-        [variant]="variant === 'error' ? 'outline' : 'primary'"
-        (click)="onAction()"
-      >
-        {{ actionLabel }}
-      </app-button>
+      <!-- Ações -->
+      <div class="empty-actions" *ngIf="actionLabel || secondaryActionLabel">
+        <app-button
+          *ngIf="actionLabel"
+          [variant]="variant === 'error' ? 'outline' : 'primary'"
+          (clicked)="onAction()"
+          [icon]="actionIcon || ''"
+        >
+          {{ actionLabel }}
+        </app-button>
 
-      <!-- Ação secundária -->
-      <app-button
-        *ngIf="secondaryActionLabel"
-        variant="ghost"
-        (click)="onSecondaryAction()"
-      >
-        {{ secondaryActionLabel }}
-      </app-button>
+        <app-button
+          *ngIf="secondaryActionLabel"
+          variant="ghost"
+          (clicked)="onSecondaryAction()"
+        >
+          {{ secondaryActionLabel }}
+        </app-button>
+      </div>
     </div>
   `,
   styles: [
@@ -84,12 +68,30 @@ export type EmptyStateVariant =
         padding: var(--spacing-3xl) var(--spacing-lg);
         text-align: center;
         min-height: 300px;
+        animation: fadeIn 0.4s ease-out;
       }
 
-      .empty-icon {
-        font-size: 4rem;
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .empty-icon-wrapper {
+        width: 96px;
+        height: 96px;
+        border-radius: var(--border-radius-full);
+        display: flex;
+        align-items: center;
+        justify-content: center;
         margin-bottom: var(--spacing-lg);
-        opacity: 0.8;
+        background: var(--color-surface-variant);
+        color: var(--color-text-hint);
       }
 
       .empty-title {
@@ -104,33 +106,45 @@ export type EmptyStateVariant =
         color: var(--color-text-secondary);
         margin: 0 0 var(--spacing-lg) 0;
         max-width: 400px;
+        line-height: var(--line-height-relaxed);
       }
 
-      .empty-state app-button + app-button {
-        margin-top: var(--spacing-sm);
+      .empty-actions {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        align-items: center;
       }
 
       /* Variantes */
-      .empty-state--error .empty-icon {
+      .empty-state--error .empty-icon-wrapper {
+        background: var(--color-danger-bg);
         color: var(--color-danger);
       }
 
-      .empty-state--search .empty-icon {
-        opacity: 0.5;
+      .empty-state--search .empty-icon-wrapper {
+        background: var(--color-info-bg);
+        color: var(--color-info);
       }
 
-      .empty-state--offline .empty-icon {
-        color: var(--color-text-hint);
+      .empty-state--offline .empty-icon-wrapper {
+        background: var(--color-warning-bg);
+        color: var(--color-warning);
+      }
+
+      .empty-state--default .empty-icon-wrapper {
+        background: var(--color-primary-subtle);
+        color: var(--color-primary);
       }
     `,
   ],
 })
 export class EmptyStateComponent {
   /** Variante do estado vazio */
-  @Input() variant: EmptyStateVariant = "default";
+  @Input() variant: EmptyStateVariant = 'default';
 
-  /** Ícone (emoji ou texto) */
-  @Input() icon?: string;
+  /** Nome do ícone Lucide */
+  @Input() iconName?: string;
 
   /** Título */
   @Input() title?: string;
@@ -140,6 +154,9 @@ export class EmptyStateComponent {
 
   /** Label do botão de ação principal */
   @Input() actionLabel?: string;
+
+  /** Ícone do botão de ação principal */
+  @Input() actionIcon?: string;
 
   /** Label do botão de ação secundária */
   @Input() secondaryActionLabel?: string;
@@ -155,11 +172,11 @@ export class EmptyStateComponent {
    */
   getDefaultIcon(): string {
     const icons: Record<EmptyStateVariant, string> = {
-      default: "📭",
-      search: "🔍",
-      error: "⚠️",
-      "no-data": "📋",
-      offline: "📡",
+      default: 'inbox',
+      search: 'search',
+      error: 'alert-triangle',
+      'no-data': 'file-text',
+      offline: 'wifi-off',
     };
     return icons[this.variant];
   }
@@ -169,11 +186,11 @@ export class EmptyStateComponent {
    */
   getDefaultTitle(): string {
     const titles: Record<EmptyStateVariant, string> = {
-      default: "Nada por aqui",
-      search: "Nenhum resultado encontrado",
-      error: "Algo deu errado",
-      "no-data": "Sem dados",
-      offline: "Você está offline",
+      default: 'Nada por aqui',
+      search: 'Nenhum resultado encontrado',
+      error: 'Algo deu errado',
+      'no-data': 'Sem dados',
+      offline: 'Você está offline',
     };
     return titles[this.variant];
   }
@@ -186,4 +203,3 @@ export class EmptyStateComponent {
     this.secondaryAction.emit();
   }
 }
-

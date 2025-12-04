@@ -1,69 +1,93 @@
 /* ===========================================
    Meus Medicamentos - Estilos Globais
    Sistema de Controle de Estoque Familiar
+   Redesign: Teal/Mint + Soft Modern
    =========================================== */
 
 /* ===========================================
-   1. VARIÁVEIS CSS (DESIGN TOKENS)
+   1. VARIÁVEIS CSS (DESIGN TOKENS) - LIGHT THEME
    =========================================== */
 
-:root {
-  /* -------- Cores Primárias -------- */
-  --color-primary: #1976d2;
-  --color-primary-dark: #1565c0;
-  --color-primary-light: #42a5f5;
+:root,
+[data-theme="light"] {
+  /* -------- Cores Primárias - Teal -------- */
+  --color-primary: #0d9488;
+  --color-primary-dark: #0f766e;
+  --color-primary-light: #14b8a6;
+  --color-primary-subtle: #ccfbf1;
   --color-primary-contrast: #ffffff;
   
-  /* -------- Cores Secundárias -------- */
-  --color-secondary: #7c4dff;
-  --color-secondary-dark: #651fff;
-  --color-secondary-light: #b388ff;
+  /* -------- Cores Accent - Coral -------- */
+  --color-accent: #f97316;
+  --color-accent-dark: #ea580c;
+  --color-accent-light: #fb923c;
+  --color-accent-subtle: #ffedd5;
+  
+  /* -------- Cores Secundárias - Indigo -------- */
+  --color-secondary: #6366f1;
+  --color-secondary-dark: #4f46e5;
+  --color-secondary-light: #818cf8;
+  --color-secondary-subtle: #e0e7ff;
   
   /* -------- Cores de Status -------- */
-  --color-success: #4caf50;
-  --color-success-light: #81c784;
-  --color-success-dark: #388e3c;
-  --color-success-bg: #e8f5e9;
+  --color-success: #10b981;
+  --color-success-light: #34d399;
+  --color-success-dark: #059669;
+  --color-success-bg: #d1fae5;
+  --color-success-text: #065f46;
   
-  --color-warning: #ff9800;
-  --color-warning-light: #ffb74d;
-  --color-warning-dark: #f57c00;
-  --color-warning-bg: #fff3e0;
+  --color-warning: #f59e0b;
+  --color-warning-light: #fbbf24;
+  --color-warning-dark: #d97706;
+  --color-warning-bg: #fef3c7;
+  --color-warning-text: #92400e;
   
-  --color-danger: #f44336;
-  --color-danger-light: #e57373;
-  --color-danger-dark: #d32f2f;
-  --color-danger-bg: #ffebee;
+  --color-danger: #ef4444;
+  --color-danger-light: #f87171;
+  --color-danger-dark: #dc2626;
+  --color-danger-bg: #fee2e2;
+  --color-danger-text: #991b1b;
   
-  --color-info: #2196f3;
-  --color-info-light: #64b5f6;
-  --color-info-dark: #1976d2;
-  --color-info-bg: #e3f2fd;
+  --color-info: #0ea5e9;
+  --color-info-light: #38bdf8;
+  --color-info-dark: #0284c7;
+  --color-info-bg: #e0f2fe;
+  --color-info-text: #075985;
   
   /* -------- Cores de Validade (Medicamentos) -------- */
-  --color-valido: #4caf50;
-  --color-valido-bg: #e8f5e9;
-  --color-valido-text: #1b5e20;
+  --color-valido: #10b981;
+  --color-valido-bg: #d1fae5;
+  --color-valido-text: #065f46;
   
-  --color-prestes: #ff9800;
-  --color-prestes-bg: #fff3e0;
-  --color-prestes-text: #e65100;
+  --color-prestes: #f59e0b;
+  --color-prestes-bg: #fef3c7;
+  --color-prestes-text: #92400e;
   
-  --color-vencido: #f44336;
-  --color-vencido-bg: #ffebee;
-  --color-vencido-text: #b71c1c;
+  --color-vencido: #ef4444;
+  --color-vencido-bg: #fee2e2;
+  --color-vencido-text: #991b1b;
   
   /* -------- Cores Neutras -------- */
-  --color-background: #f5f7fa;
+  --color-background: #f8fafc;
   --color-surface: #ffffff;
-  --color-surface-variant: #fafafa;
-  --color-text-primary: #212121;
-  --color-text-secondary: #757575;
-  --color-text-disabled: #bdbdbd;
-  --color-text-hint: #9e9e9e;
-  --color-border: #e0e0e0;
-  --color-border-light: #eeeeee;
-  --color-divider: #e0e0e0;
+  --color-surface-variant: #f1f5f9;
+  --color-surface-elevated: #ffffff;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-disabled: #94a3b8;
+  --color-text-hint: #64748b;
+  --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
+  --color-divider: #e2e8f0;
+  
+  /* -------- Backgrounds Especiais -------- */
+  --bg-gradient: linear-gradient(135deg, #f0fdfa 0%, #ecfeff 50%, #f0f9ff 100%);
+  --bg-gradient-primary: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  --bg-gradient-accent: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  
+  /* -------- Overlay -------- */
+  --color-overlay: rgba(15, 23, 42, 0.5);
+  --color-overlay-light: rgba(15, 23, 42, 0.3);
   
   /* -------- Espaçamentos -------- */
   --spacing-xs: 4px;
@@ -75,8 +99,8 @@
   --spacing-3xl: 64px;
   
   /* -------- Tipografia -------- */
-  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-family-mono: 'Fira Code', 'Consolas', 'Monaco', monospace;
+  --font-family-base: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
   
   --font-size-xs: 0.75rem;    /* 12px */
   --font-size-sm: 0.875rem;   /* 14px */
@@ -97,23 +121,33 @@
   --line-height-relaxed: 1.75;
   
   /* -------- Bordas -------- */
-  --border-radius-sm: 4px;
-  --border-radius-md: 8px;
-  --border-radius-lg: 12px;
-  --border-radius-xl: 16px;
+  --border-radius-sm: 6px;
+  --border-radius-md: 10px;
+  --border-radius-lg: 14px;
+  --border-radius-xl: 20px;
+  --border-radius-2xl: 24px;
   --border-radius-full: 9999px;
   
-  /* -------- Sombras -------- */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+  /* -------- Sombras - Soft Modern -------- */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -1px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 10px 10px -5px rgba(15, 23, 42, 0.03);
+  --shadow-2xl: 0 25px 50px -12px rgba(15, 23, 42, 0.2);
+  --shadow-inner: inset 0 2px 4px 0 rgba(15, 23, 42, 0.04);
+  
+  /* Sombras coloridas para cards especiais */
+  --shadow-primary: 0 4px 14px rgba(13, 148, 136, 0.25);
+  --shadow-accent: 0 4px 14px rgba(249, 115, 22, 0.25);
+  --shadow-success: 0 4px 14px rgba(16, 185, 129, 0.25);
+  --shadow-danger: 0 4px 14px rgba(239, 68, 68, 0.25);
   
   /* -------- Transições -------- */
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
-  --transition-slow: 350ms ease;
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 500ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
   
   /* -------- Z-Index -------- */
   --z-dropdown: 100;
@@ -123,6 +157,7 @@
   --z-modal: 500;
   --z-popover: 600;
   --z-tooltip: 700;
+  --z-toast: 800;
   
   /* -------- Breakpoints (para referência) -------- */
   --breakpoint-sm: 640px;
@@ -132,7 +167,106 @@
 }
 
 /* ===========================================
-   2. RESET E NORMALIZAÇÃO
+   2. DARK THEME
+   =========================================== */
+
+[data-theme="dark"] {
+  /* -------- Cores Primárias - Teal (ajustadas para dark) -------- */
+  --color-primary: #14b8a6;
+  --color-primary-dark: #0d9488;
+  --color-primary-light: #2dd4bf;
+  --color-primary-subtle: rgba(20, 184, 166, 0.15);
+  --color-primary-contrast: #042f2e;
+  
+  /* -------- Cores Accent -------- */
+  --color-accent: #fb923c;
+  --color-accent-dark: #f97316;
+  --color-accent-light: #fdba74;
+  --color-accent-subtle: rgba(251, 146, 60, 0.15);
+  
+  /* -------- Cores Secundárias -------- */
+  --color-secondary: #818cf8;
+  --color-secondary-dark: #6366f1;
+  --color-secondary-light: #a5b4fc;
+  --color-secondary-subtle: rgba(129, 140, 248, 0.15);
+  
+  /* -------- Cores de Status -------- */
+  --color-success: #34d399;
+  --color-success-light: #6ee7b7;
+  --color-success-dark: #10b981;
+  --color-success-bg: rgba(52, 211, 153, 0.15);
+  --color-success-text: #6ee7b7;
+  
+  --color-warning: #fbbf24;
+  --color-warning-light: #fcd34d;
+  --color-warning-dark: #f59e0b;
+  --color-warning-bg: rgba(251, 191, 36, 0.15);
+  --color-warning-text: #fcd34d;
+  
+  --color-danger: #f87171;
+  --color-danger-light: #fca5a5;
+  --color-danger-dark: #ef4444;
+  --color-danger-bg: rgba(248, 113, 113, 0.15);
+  --color-danger-text: #fca5a5;
+  
+  --color-info: #38bdf8;
+  --color-info-light: #7dd3fc;
+  --color-info-dark: #0ea5e9;
+  --color-info-bg: rgba(56, 189, 248, 0.15);
+  --color-info-text: #7dd3fc;
+  
+  /* -------- Cores de Validade -------- */
+  --color-valido: #34d399;
+  --color-valido-bg: rgba(52, 211, 153, 0.15);
+  --color-valido-text: #6ee7b7;
+  
+  --color-prestes: #fbbf24;
+  --color-prestes-bg: rgba(251, 191, 36, 0.15);
+  --color-prestes-text: #fcd34d;
+  
+  --color-vencido: #f87171;
+  --color-vencido-bg: rgba(248, 113, 113, 0.15);
+  --color-vencido-text: #fca5a5;
+  
+  /* -------- Cores Neutras -------- */
+  --color-background: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-variant: #334155;
+  --color-surface-elevated: #1e293b;
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-disabled: #475569;
+  --color-text-hint: #64748b;
+  --color-border: #334155;
+  --color-border-light: #1e293b;
+  --color-divider: #334155;
+  
+  /* -------- Backgrounds Especiais -------- */
+  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  --bg-gradient-primary: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  
+  /* -------- Overlay -------- */
+  --color-overlay: rgba(0, 0, 0, 0.7);
+  --color-overlay-light: rgba(0, 0, 0, 0.5);
+  
+  /* -------- Sombras - Dark Mode -------- */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.35), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+  
+  /* Sombras coloridas */
+  --shadow-primary: 0 4px 14px rgba(20, 184, 166, 0.3);
+  --shadow-accent: 0 4px 14px rgba(251, 146, 60, 0.3);
+  --shadow-success: 0 4px 14px rgba(52, 211, 153, 0.3);
+  --shadow-danger: 0 4px 14px rgba(248, 113, 113, 0.3);
+}
+
+/* ===========================================
+   3. RESET E NORMALIZAÇÃO
    =========================================== */
 
 *,
@@ -147,6 +281,7 @@ html {
   font-size: 16px;
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  color-scheme: light dark;
 }
 
 html, body {
@@ -163,10 +298,11 @@ body {
   background-color: var(--color-background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
 /* ===========================================
-   3. TIPOGRAFIA
+   4. TIPOGRAFIA
    =========================================== */
 
 h1, h2, h3, h4, h5, h6 {
@@ -174,6 +310,7 @@ h1, h2, h3, h4, h5, h6 {
   line-height: var(--line-height-tight);
   margin-bottom: var(--spacing-md);
   color: var(--color-text-primary);
+  letter-spacing: -0.025em;
 }
 
 h1 { font-size: var(--font-size-3xl); }
@@ -200,9 +337,10 @@ a {
     color: var(--color-primary-dark);
   }
   
-  &:focus {
-    outline: 2px solid var(--color-primary-light);
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
     outline-offset: 2px;
+    border-radius: var(--border-radius-sm);
   }
 }
 
@@ -215,7 +353,7 @@ small {
 }
 
 /* ===========================================
-   4. FORMULÁRIOS
+   5. FORMULÁRIOS
    =========================================== */
 
 input, textarea, select, button {
@@ -230,34 +368,46 @@ button {
   background: none;
 }
 
-input:focus,
-textarea:focus,
-select:focus {
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
+/* Remove spinners de inputs number */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 /* ===========================================
-   5. LAYOUT E CONTAINERS
+   6. LAYOUT E CONTAINERS
    =========================================== */
 
 .container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 var(--spacing-md);
+  width: min(100% - 2rem, 1200px);
+  margin-inline: auto;
 }
 
 .container-sm {
-  max-width: 640px;
+  width: min(100% - 2rem, 640px);
+  margin-inline: auto;
 }
 
 .container-md {
-  max-width: 768px;
+  width: min(100% - 2rem, 768px);
+  margin-inline: auto;
 }
 
 .container-lg {
-  max-width: 1024px;
+  width: min(100% - 2rem, 1024px);
+  margin-inline: auto;
 }
 
 /* Grid System */
@@ -272,41 +422,15 @@ select:focus {
 .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
 
 /* Flexbox Utilities */
-.flex {
-  display: flex;
-}
-
-.flex-col {
-  flex-direction: column;
-}
-
-.flex-wrap {
-  flex-wrap: wrap;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.items-start {
-  align-items: flex-start;
-}
-
-.items-end {
-  align-items: flex-end;
-}
-
-.justify-center {
-  justify-content: center;
-}
-
-.justify-between {
-  justify-content: space-between;
-}
-
-.justify-end {
-  justify-content: flex-end;
-}
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-end { justify-content: flex-end; }
 
 .gap-1 { gap: var(--spacing-xs); }
 .gap-2 { gap: var(--spacing-sm); }
@@ -315,7 +439,7 @@ select:focus {
 .gap-5 { gap: var(--spacing-xl); }
 
 /* ===========================================
-   6. UTILITÁRIOS DE ESPAÇAMENTO
+   7. UTILITÁRIOS DE ESPAÇAMENTO
    =========================================== */
 
 /* Margin */
@@ -383,7 +507,7 @@ select:focus {
 .py-4 { padding-top: var(--spacing-lg); padding-bottom: var(--spacing-lg); }
 
 /* ===========================================
-   7. UTILITÁRIOS DE TEXTO
+   8. UTILITÁRIOS DE TEXTO
    =========================================== */
 
 .text-left { text-align: left; }
@@ -418,7 +542,7 @@ select:focus {
 }
 
 /* ===========================================
-   8. UTILITÁRIOS VISUAIS
+   9. UTILITÁRIOS VISUAIS
    =========================================== */
 
 .bg-white { background-color: var(--color-surface); }
@@ -431,11 +555,13 @@ select:focus {
 .rounded-sm { border-radius: var(--border-radius-sm); }
 .rounded { border-radius: var(--border-radius-md); }
 .rounded-lg { border-radius: var(--border-radius-lg); }
+.rounded-xl { border-radius: var(--border-radius-xl); }
 .rounded-full { border-radius: var(--border-radius-full); }
 
 .shadow-sm { box-shadow: var(--shadow-sm); }
 .shadow { box-shadow: var(--shadow-md); }
 .shadow-lg { box-shadow: var(--shadow-lg); }
+.shadow-xl { box-shadow: var(--shadow-xl); }
 
 .border {
   border: 1px solid var(--color-border);
@@ -450,13 +576,14 @@ select:focus {
 }
 
 /* ===========================================
-   9. UTILITÁRIOS DE DISPLAY
+   10. UTILITÁRIOS DE DISPLAY
    =========================================== */
 
 .hidden { display: none; }
 .block { display: block; }
 .inline { display: inline; }
 .inline-block { display: inline-block; }
+.inline-flex { display: inline-flex; }
 
 .w-full { width: 100%; }
 .h-full { height: 100%; }
@@ -464,22 +591,23 @@ select:focus {
 .min-h-screen { min-height: 100vh; }
 
 /* ===========================================
-   10. ANIMAÇÕES
+   11. ANIMAÇÕES
    =========================================== */
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -487,52 +615,117 @@ select:focus {
   }
 }
 
-@keyframes spin {
+@keyframes slideDown {
   from {
-    transform: rotate(0deg);
+    opacity: 0;
+    transform: translateY(-16px);
   }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
+    transform: translateY(0);
   }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes bounce {
   0%, 100% {
-    opacity: 1;
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
   }
   50% {
-    opacity: 0.5;
+    transform: translateY(-8px);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
   }
 }
 
-.animate-fade-in {
-  animation: fadeIn var(--transition-normal);
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
 }
 
-.animate-slide-up {
-  animation: slideUp var(--transition-normal);
+/* Page transition animation */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.animate-spin {
-  animation: spin 1s linear infinite;
+.animate-fade-in { animation: fadeIn var(--transition-normal); }
+.animate-slide-up { animation: slideUp var(--transition-normal); }
+.animate-slide-down { animation: slideDown var(--transition-normal); }
+.animate-slide-in-right { animation: slideInRight var(--transition-normal); }
+.animate-scale-in { animation: scaleIn var(--transition-normal); }
+.animate-spin { animation: spin 1s linear infinite; }
+.animate-pulse { animation: pulse 2s ease-in-out infinite; }
+.animate-bounce { animation: bounce 1s infinite; }
+
+.page-enter {
+  animation: pageEnter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.animate-pulse {
-  animation: pulse 2s ease-in-out infinite;
-}
+/* Staggered animations */
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }
 
 /* ===========================================
-   11. RESPONSIVIDADE
+   12. RESPONSIVIDADE
    =========================================== */
 
 /* Mobile First - Breakpoints */
 @media (max-width: 639px) {
   html {
-    font-size: 14px;
-  }
-  
-  .container {
-    padding: 0 var(--spacing-sm);
+    font-size: 15px;
   }
   
   .hide-mobile {
@@ -577,7 +770,7 @@ select:focus {
 }
 
 /* ===========================================
-   12. ACESSIBILIDADE
+   13. ACESSIBILIDADE
    =========================================== */
 
 .sr-only {
@@ -592,7 +785,8 @@ select:focus {
   border: 0;
 }
 
-.focus-visible:focus {
+/* Focus visible melhorado */
+:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
@@ -605,27 +799,50 @@ select:focus {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
 /* ===========================================
-   13. SCROLLBAR CUSTOMIZADA
+   14. SCROLLBAR CUSTOMIZADA
    =========================================== */
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
   background: var(--color-background);
+  border-radius: var(--border-radius-full);
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--color-border);
   border-radius: var(--border-radius-full);
+  border: 2px solid var(--color-background);
   
   &:hover {
-    background: var(--color-text-secondary);
+    background: var(--color-text-hint);
   }
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) var(--color-background);
+}
+
+/* ===========================================
+   15. SELECTION
+   =========================================== */
+
+::selection {
+  background-color: var(--color-primary-subtle);
+  color: var(--color-primary-dark);
+}
+
+[data-theme="dark"] ::selection {
+  background-color: var(--color-primary-subtle);
+  color: var(--color-primary-light);
 }

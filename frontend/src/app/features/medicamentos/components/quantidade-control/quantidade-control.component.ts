@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { ButtonComponent } from '../../../../shared/ui/button/button.component';
+import { IconComponent } from '../../../../shared/ui/icon/icon.component';
 
 /**
  * Evento emitido ao alterar quantidade.
@@ -19,30 +20,11 @@ export interface QuantidadeChangeEvent {
  *
  * Permite incrementar/decrementar a quantidade de um medicamento
  * com feedback visual de loading e validação de limites.
- *
- * Características:
- * - Atualização otimista (mostra novo valor imediatamente)
- * - Feedback visual de loading
- * - Validação de limites (min: 0, max: configurável)
- * - Animação de sucesso/erro
- * - Acessibilidade (aria-labels)
- *
- * @example
- * <app-quantidade-control
- *   [quantidade]="medicamento.quantidadeAtual"
- *   [quantidadeTotal]="medicamento.quantidadeTotal"
- *   [loading]="isLoading"
- *   [min]="0"
- *   [max]="100"
- *   (quantidadeChange)="onQuantidadeChange($event)"
- *   (incrementar)="onIncrementar()"
- *   (decrementar)="onDecrementar()"
- * />
  */
 @Component({
   selector: 'app-quantidade-control',
   standalone: true,
-  imports: [CommonModule, ButtonComponent],
+  imports: [CommonModule, ButtonComponent, IconComponent],
   templateUrl: './quantidade-control.component.html',
   styleUrls: ['./quantidade-control.component.scss'],
 })
@@ -215,7 +197,6 @@ export class QuantidadeControlComponent {
 
   /**
    * Confirma a atualização (limpa valor otimista).
-   * Chamado quando a API confirma a operação.
    */
   confirmarAtualizacao(): void {
     this._optimisticValue.set(null);
@@ -224,7 +205,6 @@ export class QuantidadeControlComponent {
 
   /**
    * Reverte a atualização otimista.
-   * Chamado quando a API retorna erro.
    */
   reverterAtualizacao(mensagemErro?: string): void {
     this._optimisticValue.set(null);
@@ -238,9 +218,6 @@ export class QuantidadeControlComponent {
   // MÉTODOS PRIVADOS
   // ========================================
 
-  /**
-   * Anima a mudança de valor.
-   */
   private animarMudanca(): void {
     this.isAnimating.set(true);
     setTimeout(() => {
@@ -248,9 +225,6 @@ export class QuantidadeControlComponent {
     }, 200);
   }
 
-  /**
-   * Mostra mensagem de erro temporária.
-   */
   private mostrarErro(mensagem: string): void {
     this.errorMessage.set(mensagem);
     this.mostrarErroVisual();
@@ -259,9 +233,6 @@ export class QuantidadeControlComponent {
     }, 3000);
   }
 
-  /**
-   * Mostra feedback visual de sucesso.
-   */
   private mostrarSucesso(): void {
     this.showSuccess.set(true);
     setTimeout(() => {
@@ -269,9 +240,6 @@ export class QuantidadeControlComponent {
     }, 300);
   }
 
-  /**
-   * Mostra feedback visual de erro.
-   */
   private mostrarErroVisual(): void {
     this.showError.set(true);
     setTimeout(() => {

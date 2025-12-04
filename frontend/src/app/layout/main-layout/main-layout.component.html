@@ -1,26 +1,131 @@
 <div class="main-layout">
+  <!-- Header -->
   <header class="main-header">
-    <div class="container">
-      <a routerLink="/medicamentos" class="logo">💊 Meus Medicamentos</a>
-      <nav class="main-nav">
-        <span class="user-email">{{ authService.userEmail() }}</span>
-        <app-button variant="ghost" size="sm" class="logout-btn" (click)="logout()"> Sair </app-button>
+    <div class="header-container">
+      <!-- Logo -->
+      <a routerLink="/medicamentos" class="logo">
+        <div class="logo-icon">
+          <app-icon name="pill" [size]="20" />
+        </div>
+        <span class="logo-text hide-mobile">Meus Medicamentos</span>
+      </a>
+
+      <!-- Navigation (Desktop) -->
+      <nav class="main-nav hide-mobile">
+        <a 
+          routerLink="/medicamentos" 
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="nav-link"
+        >
+          <app-icon name="home" [size]="18" />
+          <span>Início</span>
+        </a>
+        <a 
+          routerLink="/medicamentos/novo" 
+          routerLinkActive="active"
+          class="nav-link"
+        >
+          <app-icon name="plus-circle" [size]="18" />
+          <span>Novo</span>
+        </a>
       </nav>
+
+      <!-- Right Section -->
+      <div class="header-actions">
+        <!-- Theme Toggle -->
+        <app-theme-toggle />
+
+        <!-- User Menu -->
+        <div class="user-menu-container">
+          <button 
+            class="user-menu-trigger"
+            (click)="toggleUserMenu()"
+            [attr.aria-expanded]="userMenuOpen()"
+            aria-haspopup="true"
+          >
+            <div class="user-avatar">
+              {{ getUserInitials() }}
+            </div>
+            <span class="user-email hide-mobile">{{ authService.userEmail() }}</span>
+            <app-icon 
+              name="chevron-down" 
+              [size]="16" 
+              class="chevron-icon"
+              [class.rotated]="userMenuOpen()"
+            />
+          </button>
+
+          <!-- Dropdown -->
+          @if (userMenuOpen()) {
+            <div class="user-dropdown" (click)="$event.stopPropagation()">
+              <div class="dropdown-header">
+                <span class="dropdown-email">{{ authService.userEmail() }}</span>
+              </div>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" (click)="logout()">
+                <app-icon name="log-out" [size]="16" />
+                <span>Sair da conta</span>
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn show-mobile" (click)="toggleMobileMenu()">
+          <app-icon [name]="mobileMenuOpen() ? 'x' : 'menu'" [size]="24" />
+        </button>
+      </div>
     </div>
+
+    <!-- Mobile Navigation -->
+    @if (mobileMenuOpen()) {
+      <nav class="mobile-nav show-mobile">
+        <a 
+          routerLink="/medicamentos" 
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="mobile-nav-link"
+          (click)="toggleMobileMenu()"
+        >
+          <app-icon name="home" [size]="20" />
+          <span>Início</span>
+        </a>
+        <a 
+          routerLink="/medicamentos/novo" 
+          routerLinkActive="active"
+          class="mobile-nav-link"
+          (click)="toggleMobileMenu()"
+        >
+          <app-icon name="plus-circle" [size]="20" />
+          <span>Novo Medicamento</span>
+        </a>
+      </nav>
+    }
   </header>
 
+  <!-- Backdrop para fechar menus -->
+  @if (userMenuOpen() || mobileMenuOpen()) {
+    <div 
+      class="backdrop" 
+      (click)="closeUserMenu(); mobileMenuOpen.set(false)"
+    ></div>
+  }
+
+  <!-- Main Content -->
   <main class="main-content">
-    <div class="container">
+    <div class="container page-enter">
       <router-outlet></router-outlet>
     </div>
   </main>
 
+  <!-- Footer -->
   <footer class="main-footer">
     <div class="container">
       <p>&copy; 2024 Meus Medicamentos - Controle de Estoque Familiar</p>
     </div>
   </footer>
 
-  <!-- Toast Container para notificações -->
+  <!-- Toast Container -->
   <app-toast />
 </div>

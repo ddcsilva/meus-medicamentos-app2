@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { NotificationService } from '../../../core/services/notification.service';
 import { Notification, NotificationType } from '../../../core/services/notification/models';
+import { IconComponent } from '../icon/icon.component';
 
 /**
  * Componente de Toast/Snackbar.
@@ -15,52 +16,57 @@ import { Notification, NotificationType } from '../../../core/services/notificat
 @Component({
   selector: 'app-toast',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   template: `
     <div class="toast-container" role="region" aria-label="Notificações">
       @for (notification of notificationService.notifications(); track notification.id) {
-      <div
-        class="toast"
-        [class]="'toast--' + notification.type"
-        role="alert"
-        [attr.aria-live]="notification.type === 'error' ? 'assertive' : 'polite'"
-      >
-        <!-- Ícone -->
-        <span class="toast-icon" aria-hidden="true">
-          {{ getIcon(notification.type) }}
-        </span>
-
-        <!-- Conteúdo -->
-        <div class="toast-content">
-          <strong *ngIf="notification.title" class="toast-title">
-            {{ notification.title }}
-          </strong>
-          <p class="toast-message">{{ notification.message }}</p>
-        </div>
-
-        <!-- Ações -->
-        <div class="toast-actions">
-          <button *ngIf="notification.action" type="button" class="toast-action-btn" (click)="onAction(notification)">
-            {{ notification.action.label }}
-          </button>
-          <button
-            *ngIf="notification.dismissible"
-            type="button"
-            class="toast-close-btn"
-            (click)="dismiss(notification.id)"
-            aria-label="Fechar notificação"
-          >
-            ✕
-          </button>
-        </div>
-
-        <!-- Barra de progresso -->
         <div
-          *ngIf="notification.duration > 0"
-          class="toast-progress"
-          [style.animation-duration.ms]="notification.duration"
-        ></div>
-      </div>
+          class="toast"
+          [class]="'toast--' + notification.type"
+          role="alert"
+          [attr.aria-live]="notification.type === 'error' ? 'assertive' : 'polite'"
+        >
+          <!-- Ícone -->
+          <div class="toast-icon-wrapper">
+            <app-icon [name]="getIcon(notification.type)" [size]="18" />
+          </div>
+
+          <!-- Conteúdo -->
+          <div class="toast-content">
+            <strong *ngIf="notification.title" class="toast-title">
+              {{ notification.title }}
+            </strong>
+            <p class="toast-message">{{ notification.message }}</p>
+          </div>
+
+          <!-- Ações -->
+          <div class="toast-actions">
+            <button 
+              *ngIf="notification.action" 
+              type="button" 
+              class="toast-action-btn" 
+              (click)="onAction(notification)"
+            >
+              {{ notification.action.label }}
+            </button>
+            <button
+              *ngIf="notification.dismissible"
+              type="button"
+              class="toast-close-btn"
+              (click)="dismiss(notification.id)"
+              aria-label="Fechar notificação"
+            >
+              <app-icon name="x" [size]="16" />
+            </button>
+          </div>
+
+          <!-- Barra de progresso -->
+          <div
+            *ngIf="notification.duration > 0"
+            class="toast-progress"
+            [style.animation-duration.ms]="notification.duration"
+          ></div>
+        </div>
       }
     </div>
   `,
@@ -70,7 +76,7 @@ import { Notification, NotificationType } from '../../../core/services/notificat
         position: fixed;
         bottom: var(--spacing-lg);
         right: var(--spacing-lg);
-        z-index: 9999;
+        z-index: var(--z-toast);
         display: flex;
         flex-direction: column;
         gap: var(--spacing-sm);
@@ -85,70 +91,71 @@ import { Notification, NotificationType } from '../../../core/services/notificat
         gap: var(--spacing-sm);
         padding: var(--spacing-md);
         background: var(--color-surface);
-        border-radius: var(--border-radius-lg);
-        box-shadow: var(--shadow-lg);
-        border-left: 4px solid;
+        border-radius: var(--border-radius-xl);
+        box-shadow: var(--shadow-xl);
         pointer-events: auto;
-        animation: toast-enter 0.3s ease-out;
+        animation: toast-enter 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
+        border: 1px solid var(--color-border-light);
       }
 
       @keyframes toast-enter {
         from {
           opacity: 0;
-          transform: translateX(100%);
+          transform: translateX(100%) scale(0.95);
         }
         to {
           opacity: 1;
-          transform: translateX(0);
+          transform: translateX(0) scale(1);
         }
+      }
+
+      /* Icon Wrapper */
+      .toast-icon-wrapper {
+        width: 32px;
+        height: 32px;
+        border-radius: var(--border-radius-full);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
       }
 
       /* Tipos */
       .toast--success {
-        border-left-color: var(--color-success);
+        .toast-icon-wrapper {
+          background: var(--color-success-bg);
+          color: var(--color-success);
+        }
       }
 
       .toast--error {
-        border-left-color: var(--color-danger);
+        .toast-icon-wrapper {
+          background: var(--color-danger-bg);
+          color: var(--color-danger);
+        }
       }
 
       .toast--warning {
-        border-left-color: var(--color-prestes);
+        .toast-icon-wrapper {
+          background: var(--color-warning-bg);
+          color: var(--color-warning);
+        }
       }
 
       .toast--info {
-        border-left-color: var(--color-primary);
-      }
-
-      /* Ícone */
-      .toast-icon {
-        font-size: 1.25rem;
-        flex-shrink: 0;
-        margin-top: 2px;
-      }
-
-      .toast--success .toast-icon {
-        color: var(--color-success);
-      }
-
-      .toast--error .toast-icon {
-        color: var(--color-danger);
-      }
-
-      .toast--warning .toast-icon {
-        color: var(--color-prestes);
-      }
-
-      .toast--info .toast-icon {
-        color: var(--color-primary);
+        .toast-icon-wrapper {
+          background: var(--color-info-bg);
+          color: var(--color-info);
+        }
       }
 
       /* Conteúdo */
       .toast-content {
         flex: 1;
         min-width: 0;
+        padding-top: 4px;
       }
 
       .toast-title {
@@ -179,31 +186,33 @@ import { Notification, NotificationType } from '../../../core/services/notificat
         border: none;
         color: var(--color-primary);
         font-size: var(--font-size-sm);
-        font-weight: var(--font-weight-medium);
+        font-weight: var(--font-weight-semibold);
         cursor: pointer;
         padding: var(--spacing-xs) var(--spacing-sm);
-        border-radius: var(--border-radius-sm);
+        border-radius: var(--border-radius-md);
         transition: background-color var(--transition-fast);
 
         &:hover {
-          background-color: rgba(25, 118, 210, 0.1);
+          background-color: var(--color-primary-subtle);
         }
       }
 
       .toast-close-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
         background: none;
         border: none;
         color: var(--color-text-hint);
-        font-size: var(--font-size-sm);
         cursor: pointer;
-        padding: var(--spacing-xs);
-        border-radius: var(--border-radius-sm);
-        line-height: 1;
+        border-radius: var(--border-radius-md);
         transition: all var(--transition-fast);
 
         &:hover {
           color: var(--color-text-secondary);
-          background-color: var(--color-background);
+          background-color: var(--color-surface-variant);
         }
       }
 
@@ -214,10 +223,23 @@ import { Notification, NotificationType } from '../../../core/services/notificat
         left: 0;
         right: 0;
         height: 3px;
-        background: currentColor;
+        background: var(--color-primary);
         opacity: 0.3;
         animation: progress-shrink linear forwards;
         transform-origin: left;
+        border-radius: 0 0 var(--border-radius-xl) var(--border-radius-xl);
+      }
+
+      .toast--success .toast-progress {
+        background: var(--color-success);
+      }
+
+      .toast--error .toast-progress {
+        background: var(--color-danger);
+      }
+
+      .toast--warning .toast-progress {
+        background: var(--color-warning);
       }
 
       @keyframes progress-shrink {
@@ -245,14 +267,14 @@ export class ToastComponent {
   readonly notificationService = inject(NotificationService);
 
   /**
-   * Retorna o ícone para o tipo de notificação.
+   * Retorna o ícone Lucide para o tipo de notificação.
    */
   getIcon(type: NotificationType): string {
     const icons: Record<NotificationType, string> = {
-      success: '✓',
-      error: '✕',
-      warning: '⚠',
-      info: 'ℹ',
+      success: 'check-circle',
+      error: 'x-circle',
+      warning: 'alert-triangle',
+      info: 'info',
     };
     return icons[type];
   }

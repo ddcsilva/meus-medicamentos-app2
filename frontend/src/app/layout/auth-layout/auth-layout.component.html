@@ -1,12 +1,64 @@
 <div class="auth-layout">
-  <div class="auth-container">
-    <div class="auth-header">
-      <h1 class="auth-logo">💊 Meus Medicamentos</h1>
-      <p class="auth-subtitle">Controle de Estoque Familiar</p>
+  <!-- Lado Ilustração (esconde em mobile) -->
+  <div class="auth-illustration hide-mobile">
+    <!-- Floating Pills Animation -->
+    <div class="floating-pills">
+      <div class="pill pill-1"></div>
+      <div class="pill pill-2"></div>
+      <div class="pill pill-3"></div>
+      <div class="pill pill-4"></div>
     </div>
+    
+    <!-- Content -->
+    <div class="illustration-content">
+      <div class="illustration-icon">
+        <app-icon name="pill" [size]="48" />
+      </div>
+      <h2>Controle seus medicamentos com facilidade</h2>
+      <p>Nunca mais esqueça uma dose ou deixe um remédio vencer. Gerencie o estoque de toda a família em um só lugar.</p>
+      
+      <div class="features">
+        <div class="feature">
+          <app-icon name="check-circle" [size]="20" />
+          <span>Alertas de validade</span>
+        </div>
+        <div class="feature">
+          <app-icon name="check-circle" [size]="20" />
+          <span>Controle de estoque</span>
+        </div>
+        <div class="feature">
+          <app-icon name="check-circle" [size]="20" />
+          <span>100% gratuito</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <div class="auth-content">
-      <router-outlet></router-outlet>
+  <!-- Lado Formulário -->
+  <div class="auth-form-side">
+    <!-- Theme Toggle -->
+    <div class="theme-toggle-wrapper">
+      <app-theme-toggle />
+    </div>
+    
+    <div class="auth-container">
+      <!-- Logo -->
+      <div class="auth-logo">
+        <div class="logo-icon">
+          <app-icon name="pill" [size]="28" />
+        </div>
+        <span class="logo-text">Meus Medicamentos</span>
+      </div>
+      
+      <!-- Form Content (Router Outlet) -->
+      <div class="auth-content">
+        <router-outlet></router-outlet>
+      </div>
+      
+      <!-- Footer -->
+      <div class="auth-footer">
+        <p>&copy; 2024 Meus Medicamentos</p>
+      </div>
     </div>
   </div>
 </div>

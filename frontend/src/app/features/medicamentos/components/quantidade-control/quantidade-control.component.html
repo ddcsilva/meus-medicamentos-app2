@@ -12,11 +12,13 @@
     variant="outline"
     [size]="size"
     [disabled]="isDecrementDisabled"
-    (click)="onDecrementar()"
+    (clicked)="onDecrementar()"
     class="btn-minus"
     aria-label="Diminuir quantidade"
+    [iconOnly]="true"
+    icon="minus"
   >
-    <span class="btn-icon">−</span>
+    Diminuir
   </app-button>
 
   <!-- Display de Quantidade -->
@@ -30,11 +32,11 @@
     <span *ngIf="showTotal && quantidadeTotal" class="quantidade-total"> / {{ quantidadeTotal }} </span>
 
     <!-- Indicador de loading -->
-    <span *ngIf="loading" class="loading-indicator" aria-hidden="true">
-      <span class="loading-dot"></span>
-      <span class="loading-dot"></span>
-      <span class="loading-dot"></span>
-    </span>
+    @if (loading) {
+      <span class="loading-indicator" aria-hidden="true">
+        <app-icon name="loader-2" [size]="14" class="animate-spin" />
+      </span>
+    }
   </div>
 
   <!-- Botão Incrementar -->
@@ -42,15 +44,20 @@
     variant="outline"
     [size]="size"
     [disabled]="isIncrementDisabled"
-    (click)="onIncrementar()"
+    (clicked)="onIncrementar()"
     class="btn-plus"
     aria-label="Aumentar quantidade"
+    [iconOnly]="true"
+    icon="plus"
   >
-    <span class="btn-icon">+</span>
+    Aumentar
   </app-button>
 </div>
 
 <!-- Mensagem de erro -->
-<div *ngIf="errorMessage()" class="error-message" role="alert">
-  {{ errorMessage() }}
-</div>
+@if (errorMessage()) {
+  <div class="error-message" role="alert">
+    <app-icon name="alert-circle" [size]="12" />
+    {{ errorMessage() }}
+  </div>
+}

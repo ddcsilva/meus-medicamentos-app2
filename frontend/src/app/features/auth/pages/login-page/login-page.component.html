@@ -3,55 +3,38 @@
   <p class="login-subtitle">Digite suas credenciais para acessar o sistema</p>
 
   <!-- Mensagem de erro -->
-  <div *ngIf="errorMessage()" class="error-alert">
-    <span class="error-icon">⚠️</span>
+  @if (errorMessage()) {
+  <div class="error-alert" role="alert">
+    <app-icon name="alert-circle" [size]="18" />
     <span>{{ errorMessage() }}</span>
   </div>
+  }
 
   <!-- Formulário de login -->
   <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
     <!-- Campo de e-mail -->
-    <div class="form-field">
-      <label for="email" class="form-label">
-        E-mail
-        <span class="required">*</span>
-      </label>
-      <input
-        id="email"
-        type="email"
-        formControlName="email"
-        class="form-input"
-        [class.has-error]="isFieldInvalid('email')"
-        placeholder="email@email.com"
-        autocomplete="email"
-      />
-      <span *ngIf="isFieldInvalid('email')" class="field-error">
-        {{ getFieldError('email') }}
-      </span>
-    </div>
+    <app-input
+      label="E-mail"
+      type="email"
+      formControlName="email"
+      placeholder="seu@email.com"
+      prefixIcon="mail"
+      autocomplete="email"
+      [required]="true"
+      [error]="isFieldInvalid('email') ? getFieldError('email') : ''"
+    />
 
     <!-- Campo de senha -->
-    <div class="form-field">
-      <label for="password" class="form-label">
-        Senha
-        <span class="required">*</span>
-      </label>
-      <input
-        id="password"
-        [type]="showPassword() ? 'text' : 'password'"
-        formControlName="password"
-        class="form-input"
-        [class.has-error]="isFieldInvalid('password')"
-        placeholder="Digite sua senha"
-        autocomplete="current-password"
-      />
-      <button type="button" class="toggle-password" (click)="togglePasswordVisibility()" tabindex="-1">
-        {{ showPassword() ? '🙈' : '👁️' }}
-      </button>
-      <span *ngIf="isFieldInvalid('password')" class="field-error">
-        {{ getFieldError('password') }}
-      </span>
-    </div>
+    <app-input
+      label="Senha"
+      type="password"
+      formControlName="password"
+      placeholder="Digite sua senha"
+      prefixIcon="lock"
+      autocomplete="current-password"
+      [required]="true"
+      [error]="isFieldInvalid('password') ? getFieldError('password') : ''"
+    />
 
     <!-- Botão de submit -->
     <app-button
@@ -60,6 +43,7 @@
       [block]="true"
       [loading]="isLoading()"
       [disabled]="loginForm.invalid || isLoading()"
+      icon="log-in"
     >
       {{ isLoading() ? 'Entrando...' : 'Entrar' }}
     </app-button>
@@ -67,7 +51,10 @@
 
   <!-- Informações adicionais -->
   <div class="login-footer">
-    <p class="help-text">Esqueceu a senha? Entre em contato com o administrador.</p>
+    <p class="help-text">
+      <app-icon name="help-circle" [size]="14" />
+      Esqueceu a senha? Entre em contato com o administrador.
+    </p>
   </div>
 </div>
 

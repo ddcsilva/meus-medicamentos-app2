@@ -1,31 +1,25 @@
-import { Component, inject, signal } from "@angular/core";
-import { CommonModule } from "@angular/common";
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
   Validators,
-} from "@angular/forms";
-import { Router, RouterLink } from "@angular/router";
-import { NotificationService } from "../../../../core/services/notification.service";
-import { ButtonComponent } from "../../../../shared/ui/button/button.component";
-import { CardComponent } from "../../../../shared/ui/card/card.component";
-import { LoadingComponent } from "../../../../shared/ui/loading/loading.component";
-import { MedicamentosStore } from "../../services/medicamentos.store";
-import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
+} from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { NotificationService } from '../../../../core/services/notification.service';
+import { ButtonComponent } from '../../../../shared/ui/button/button.component';
+import { CardComponent } from '../../../../shared/ui/card/card.component';
+import { IconComponent } from '../../../../shared/ui/icon/icon.component';
+import { LoadingComponent } from '../../../../shared/ui/loading/loading.component';
+import { MedicamentosStore } from '../../services/medicamentos.store';
+import { CreateMedicamentoDto, TipoMedicamento } from '../../models';
 
 /**
  * Página de cadastro de novo medicamento.
- *
- * Formulário com todos os campos do PRD:
- * - Nome, droga, genérico
- * - Marca, laboratório
- * - Tipo, validade
- * - Quantidades
- * - Observações
  */
 @Component({
-  selector: "app-medicamentos-new-page",
+  selector: 'app-medicamentos-new-page',
   standalone: true,
   imports: [
     CommonModule,
@@ -34,6 +28,7 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
     ButtonComponent,
     CardComponent,
     LoadingComponent,
+    IconComponent,
   ],
   template: `
     <div class="medicamentos-new-page">
@@ -41,28 +36,37 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
       <div class="page-header">
         <div class="header-nav">
           <a routerLink="/medicamentos" class="back-link">
-            ← Voltar para lista
+            <app-icon name="arrow-left" [size]="16" />
+            Voltar para lista
           </a>
         </div>
-        <h1>Novo Medicamento</h1>
+        <h1>
+          <app-icon name="plus-circle" [size]="28" class="header-icon" />
+          Novo Medicamento
+        </h1>
         <p class="subtitle">Preencha os dados do medicamento</p>
       </div>
 
       <!-- Erro -->
-      <div *ngIf="store.hasError()" class="error-alert">
-        <span class="error-icon">⚠️</span>
-        <span>{{ store.error()?.message }}</span>
-        <app-button variant="ghost" size="sm" (click)="store.clearError()">
-          Fechar
-        </app-button>
-      </div>
+      @if (store.hasError()) {
+        <div class="error-alert">
+          <app-icon name="alert-circle" [size]="20" />
+          <span>{{ store.error()?.message }}</span>
+          <app-button variant="ghost" size="sm" (clicked)="store.clearError()" icon="x" [iconOnly]="true">
+            Fechar
+          </app-button>
+        </div>
+      }
 
       <!-- Formulário -->
       <app-card variant="elevated">
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-container">
           <!-- Seção: Identificação -->
           <div class="form-section">
-            <h3 class="section-title">Identificação</h3>
+            <h3 class="section-title">
+              <app-icon name="pill" [size]="18" />
+              Identificação
+            </h3>
 
             <div class="form-row">
               <div class="form-field">
@@ -77,9 +81,9 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
                   [class.has-error]="isFieldInvalid('nome')"
                   placeholder="Ex: Dipirona 500mg"
                 />
-                <span *ngIf="isFieldInvalid('nome')" class="field-error">
-                  {{ getFieldError("nome") }}
-                </span>
+                @if (isFieldInvalid('nome')) {
+                  <span class="field-error">{{ getFieldError('nome') }}</span>
+                }
               </div>
             </div>
 
@@ -96,9 +100,9 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
                   [class.has-error]="isFieldInvalid('droga')"
                   placeholder="Ex: Dipirona Sódica"
                 />
-                <span *ngIf="isFieldInvalid('droga')" class="field-error">
-                  {{ getFieldError("droga") }}
-                </span>
+                @if (isFieldInvalid('droga')) {
+                  <span class="field-error">{{ getFieldError('droga') }}</span>
+                }
               </div>
 
               <div class="form-field">
@@ -120,7 +124,10 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
 
           <!-- Seção: Fabricante -->
           <div class="form-section">
-            <h3 class="section-title">Fabricante</h3>
+            <h3 class="section-title">
+              <app-icon name="package" [size]="18" />
+              Fabricante
+            </h3>
 
             <div class="form-row two-cols">
               <div class="form-field">
@@ -135,9 +142,9 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
                   [class.has-error]="isFieldInvalid('marca')"
                   placeholder="Ex: Medley"
                 />
-                <span *ngIf="isFieldInvalid('marca')" class="field-error">
-                  {{ getFieldError("marca") }}
-                </span>
+                @if (isFieldInvalid('marca')) {
+                  <span class="field-error">{{ getFieldError('marca') }}</span>
+                }
               </div>
 
               <div class="form-field">
@@ -152,16 +159,19 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
                   [class.has-error]="isFieldInvalid('laboratorio')"
                   placeholder="Ex: Sanofi"
                 />
-                <span *ngIf="isFieldInvalid('laboratorio')" class="field-error">
-                  {{ getFieldError("laboratorio") }}
-                </span>
+                @if (isFieldInvalid('laboratorio')) {
+                  <span class="field-error">{{ getFieldError('laboratorio') }}</span>
+                }
               </div>
             </div>
           </div>
 
           <!-- Seção: Detalhes -->
           <div class="form-section">
-            <h3 class="section-title">Detalhes</h3>
+            <h3 class="section-title">
+              <app-icon name="info" [size]="18" />
+              Detalhes
+            </h3>
 
             <div class="form-row two-cols">
               <div class="form-field">
@@ -175,13 +185,13 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
                   [class.has-error]="isFieldInvalid('tipo')"
                 >
                   <option value="">Selecione...</option>
-                  <option *ngFor="let tipo of tiposMedicamento" [value]="tipo">
-                    {{ formatarTipo(tipo) }}
-                  </option>
+                  @for (tipo of tiposMedicamento; track tipo) {
+                    <option [value]="tipo">{{ formatarTipo(tipo) }}</option>
+                  }
                 </select>
-                <span *ngIf="isFieldInvalid('tipo')" class="field-error">
-                  {{ getFieldError("tipo") }}
-                </span>
+                @if (isFieldInvalid('tipo')) {
+                  <span class="field-error">{{ getFieldError('tipo') }}</span>
+                }
               </div>
 
               <div class="form-field">
@@ -195,16 +205,19 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
                   class="form-input"
                   [class.has-error]="isFieldInvalid('validade')"
                 />
-                <span *ngIf="isFieldInvalid('validade')" class="field-error">
-                  {{ getFieldError("validade") }}
-                </span>
+                @if (isFieldInvalid('validade')) {
+                  <span class="field-error">{{ getFieldError('validade') }}</span>
+                }
               </div>
             </div>
           </div>
 
           <!-- Seção: Quantidade -->
           <div class="form-section">
-            <h3 class="section-title">Quantidade</h3>
+            <h3 class="section-title">
+              <app-icon name="hash" [size]="18" />
+              Quantidade
+            </h3>
 
             <div class="form-row two-cols">
               <div class="form-field">
@@ -223,12 +236,9 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
                 <span class="field-hint">
                   Quantidade total na embalagem/caixa
                 </span>
-                <span
-                  *ngIf="isFieldInvalid('quantidadeTotal')"
-                  class="field-error"
-                >
-                  {{ getFieldError("quantidadeTotal") }}
-                </span>
+                @if (isFieldInvalid('quantidadeTotal')) {
+                  <span class="field-error">{{ getFieldError('quantidadeTotal') }}</span>
+                }
               </div>
 
               <div class="form-field">
@@ -247,19 +257,19 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
                 <span class="field-hint">
                   Quantidade disponível no momento
                 </span>
-                <span
-                  *ngIf="isFieldInvalid('quantidadeAtual')"
-                  class="field-error"
-                >
-                  {{ getFieldError("quantidadeAtual") }}
-                </span>
+                @if (isFieldInvalid('quantidadeAtual')) {
+                  <span class="field-error">{{ getFieldError('quantidadeAtual') }}</span>
+                }
               </div>
             </div>
           </div>
 
           <!-- Seção: Observações -->
           <div class="form-section">
-            <h3 class="section-title">Observações</h3>
+            <h3 class="section-title">
+              <app-icon name="file-text" [size]="18" />
+              Observações
+            </h3>
 
             <div class="form-row">
               <div class="form-field">
@@ -281,8 +291,9 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
           <div class="form-actions">
             <app-button
               type="button"
-              variant="outline"
+              variant="ghost"
               routerLink="/medicamentos"
+              icon="x"
             >
               Cancelar
             </app-button>
@@ -291,8 +302,9 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
               variant="primary"
               [loading]="store.loading()"
               [disabled]="form.invalid || store.loading()"
+              icon="check"
             >
-              {{ store.loading() ? "Salvando..." : "Salvar Medicamento" }}
+              {{ store.loading() ? 'Salvando...' : 'Salvar Medicamento' }}
             </app-button>
           </div>
         </form>
@@ -302,14 +314,14 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
   styles: [
     `
       .medicamentos-new-page {
-        padding: var(--spacing-lg) 0;
+        padding: var(--spacing-md) 0;
         max-width: 800px;
         margin: 0 auto;
       }
 
       /* Header */
       .page-header {
-        margin-bottom: var(--spacing-lg);
+        margin-bottom: var(--spacing-xl);
       }
 
       .header-nav {
@@ -317,21 +329,31 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
       }
 
       .back-link {
-        color: var(--color-primary);
-        text-decoration: none;
-        font-size: var(--font-size-sm);
         display: inline-flex;
         align-items: center;
         gap: var(--spacing-xs);
+        color: var(--color-primary);
+        text-decoration: none;
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
+        transition: color var(--transition-fast);
 
         &:hover {
-          text-decoration: underline;
+          color: var(--color-primary-dark);
         }
       }
 
       h1 {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
         color: var(--color-text-primary);
         margin-bottom: var(--spacing-xs);
+        font-size: var(--font-size-2xl);
+      }
+
+      .header-icon {
+        color: var(--color-primary);
       }
 
       .subtitle {
@@ -347,14 +369,19 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
         padding: var(--spacing-md);
         background-color: var(--color-danger-bg);
         border: 1px solid var(--color-danger-light);
-        border-radius: var(--border-radius-md);
+        border-radius: var(--border-radius-lg);
         margin-bottom: var(--spacing-lg);
-        color: var(--color-vencido-text);
+        color: var(--color-danger-text);
         font-size: var(--font-size-sm);
-      }
 
-      .error-icon {
-        font-size: var(--font-size-lg);
+        app-icon {
+          color: var(--color-danger);
+          flex-shrink: 0;
+        }
+
+        span {
+          flex: 1;
+        }
       }
 
       /* Formulário */
@@ -371,12 +398,19 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
       }
 
       .section-title {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
         font-size: var(--font-size-base);
         font-weight: var(--font-weight-semibold);
         color: var(--color-text-primary);
         margin: 0;
         padding-bottom: var(--spacing-sm);
         border-bottom: 1px solid var(--color-border-light);
+
+        app-icon {
+          color: var(--color-primary);
+        }
       }
 
       .form-row {
@@ -414,13 +448,13 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
       .form-select,
       .form-textarea {
         width: 100%;
-        padding: var(--spacing-sm) var(--spacing-md);
+        padding: 12px var(--spacing-md);
         font-family: inherit;
         font-size: var(--font-size-base);
         color: var(--color-text-primary);
         background-color: var(--color-surface);
-        border: 1px solid var(--color-border);
-        border-radius: var(--border-radius-md);
+        border: 2px solid var(--color-border);
+        border-radius: var(--border-radius-lg);
         transition: all var(--transition-fast);
 
         &::placeholder {
@@ -430,14 +464,14 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
         &:focus {
           outline: none;
           border-color: var(--color-primary);
-          box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+          box-shadow: 0 0 0 4px var(--color-primary-subtle);
         }
 
         &.has-error {
           border-color: var(--color-danger);
 
           &:focus {
-            box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+            box-shadow: 0 0 0 4px var(--color-danger-bg);
           }
         }
       }
@@ -448,20 +482,21 @@ import { CreateMedicamentoDto, TipoMedicamento } from "../../models";
 
       .form-textarea {
         resize: vertical;
-        min-height: 80px;
+        min-height: 100px;
       }
 
       .checkbox-wrapper {
         display: flex;
         align-items: center;
         gap: var(--spacing-sm);
-        padding: var(--spacing-sm) 0;
+        padding: var(--spacing-md) 0;
       }
 
       .form-checkbox {
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
         cursor: pointer;
+        accent-color: var(--color-primary);
       }
 
       .checkbox-label {
@@ -513,88 +548,54 @@ export class MedicamentosNewPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly notification = inject(NotificationService);
 
-  /** Tipos de medicamento disponíveis */
   readonly tiposMedicamento: TipoMedicamento[] = [
-    "comprimido",
-    "capsula",
-    "liquido",
-    "spray",
-    "creme",
-    "pomada",
-    "gel",
-    "gotas",
-    "injetavel",
-    "outro",
+    'comprimido', 'capsula', 'liquido', 'spray', 'creme',
+    'pomada', 'gel', 'gotas', 'injetavel', 'outro',
   ];
 
-  /** Formulário reativo */
   readonly form: FormGroup = this.fb.group({
-    nome: ["", [Validators.required, Validators.minLength(3)]],
-    droga: ["", [Validators.required, Validators.minLength(3)]],
+    nome: ['', [Validators.required, Validators.minLength(3)]],
+    droga: ['', [Validators.required, Validators.minLength(3)]],
     generico: [false],
-    marca: ["", [Validators.required]],
-    laboratorio: ["", [Validators.required]],
-    tipo: ["", [Validators.required]],
-    validade: ["", [Validators.required]],
+    marca: ['', [Validators.required]],
+    laboratorio: ['', [Validators.required]],
+    tipo: ['', [Validators.required]],
+    validade: ['', [Validators.required]],
     quantidadeTotal: [null, [Validators.required, Validators.min(1)]],
     quantidadeAtual: [null, [Validators.required, Validators.min(0)]],
-    observacoes: [""],
+    observacoes: [''],
   });
 
-  /**
-   * Verifica se um campo está inválido.
-   */
   isFieldInvalid(fieldName: string): boolean {
     const field = this.form.get(fieldName);
     return field ? field.invalid && (field.dirty || field.touched) : false;
   }
 
-  /**
-   * Obtém mensagem de erro de um campo.
-   */
   getFieldError(fieldName: string): string {
     const field = this.form.get(fieldName);
-    if (!field || !field.errors) return "";
-
-    if (field.errors["required"]) return "Campo obrigatório.";
-    if (field.errors["minlength"]) {
-      return `Mínimo de ${field.errors["minlength"].requiredLength} caracteres.`;
+    if (!field || !field.errors) return '';
+    if (field.errors['required']) return 'Campo obrigatório.';
+    if (field.errors['minlength']) {
+      return `Mínimo de ${field.errors['minlength'].requiredLength} caracteres.`;
     }
-    if (field.errors["min"]) {
-      return `Valor mínimo: ${field.errors["min"].min}.`;
+    if (field.errors['min']) {
+      return `Valor mínimo: ${field.errors['min'].min}.`;
     }
-
-    return "Campo inválido.";
+    return 'Campo inválido.';
   }
 
-  /**
-   * Formata o tipo de medicamento para exibição.
-   */
   formatarTipo(tipo: string): string {
     const formatMap: Record<string, string> = {
-      comprimido: "Comprimido",
-      capsula: "Cápsula",
-      liquido: "Líquido",
-      spray: "Spray",
-      creme: "Creme",
-      pomada: "Pomada",
-      gel: "Gel",
-      gotas: "Gotas",
-      injetavel: "Injetável",
-      outro: "Outro",
+      comprimido: 'Comprimido', capsula: 'Cápsula', liquido: 'Líquido',
+      spray: 'Spray', creme: 'Creme', pomada: 'Pomada', gel: 'Gel',
+      gotas: 'Gotas', injetavel: 'Injetável', outro: 'Outro',
     };
     return formatMap[tipo] || tipo;
   }
 
-  /**
-   * Submete o formulário.
-   */
   async onSubmit(): Promise<void> {
     this.form.markAllAsTouched();
-
-    if (this.form.invalid) {
-      return;
-    }
+    if (this.form.invalid) return;
 
     const dto: CreateMedicamentoDto = {
       nome: this.form.value.nome,
@@ -612,10 +613,8 @@ export class MedicamentosNewPageComponent {
     const medicamento = await this.store.create(dto);
 
     if (medicamento) {
-      this.notification.success("Medicamento cadastrado com sucesso!", {
-        title: "Sucesso",
-      });
-      this.router.navigate(["/medicamentos"]);
+      this.notification.success('Medicamento cadastrado com sucesso!', { title: 'Sucesso' });
+      this.router.navigate(['/medicamentos']);
     } else if (this.store.error()) {
       this.notification.error(this.store.error()!.message);
     }

@@ -5,12 +5,14 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { ButtonComponent } from '../../../../shared/ui/button/button.component';
+import { IconComponent } from '../../../../shared/ui/icon/icon.component';
+import { InputComponent } from '../../../../shared/ui/input/input.component';
 import { ToastComponent } from '../../../../shared/ui/toast/toast.component';
 
 @Component({
   selector: 'app-login-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ButtonComponent, ToastComponent],
+  imports: [CommonModule, ReactiveFormsModule, ButtonComponent, ToastComponent, IconComponent, InputComponent],
   templateUrl: './login-page.component.html',
   styleUrls: ['./login-page.component.scss'],
 })
@@ -21,7 +23,6 @@ export class LoginPageComponent {
   private readonly notification = inject(NotificationService);
 
   readonly isLoading = signal(false);
-  readonly showPassword = signal(false);
 
   readonly errorMessage = computed(() => this.authService.authError()?.message ?? null);
 
@@ -29,13 +30,6 @@ export class LoginPageComponent {
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
-
-  /**
-   * Alterna a visibilidade da senha.
-   */
-  togglePasswordVisibility(): void {
-    this.showPassword.update((value) => !value);
-  }
 
   /**
    * Verifica se um campo está inválido e foi tocado.
@@ -72,7 +66,6 @@ export class LoginPageComponent {
 
   /**
    * Submete o formulário de login.
-   * O erro é gerenciado automaticamente pelo AuthService.
    */
   async onSubmit(): Promise<void> {
     this.loginForm.markAllAsTouched();

@@ -1,17 +1,38 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../icon/icon.component';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'outline' | 'ghost';
+export type ButtonVariant = 
+  | 'primary' 
+  | 'secondary' 
+  | 'success' 
+  | 'warning' 
+  | 'danger' 
+  | 'outline' 
+  | 'ghost'
+  | 'ghost-light'  // Para uso em headers/backgrounds escuros
+  | 'link';
+
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 /**
- * Componente de botão reutilizável com variantes e tamanhos.
+ * Componente de botão reutilizável com variantes, tamanhos e suporte a ícones.
  * 
  * @example
- * <app-button variant="primary" size="md" (clicked)="onSave()">
+ * // Botão simples
+ * <app-button variant="primary" (clicked)="onSave()">
  *   Salvar
  * </app-button>
  * 
+ * // Com ícone
+ * <app-button variant="primary" icon="plus">
+ *   Adicionar
+ * </app-button>
+ * 
+ * // Apenas ícone
+ * <app-button variant="ghost" icon="settings" [iconOnly]="true" />
+ * 
+ * // Loading state
  * <app-button variant="danger" [loading]="isLoading">
  *   Excluir
  * </app-button>
@@ -19,18 +40,40 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
 @Component({
   selector: 'app-button',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   template: `
     <button
       [type]="type"
       [disabled]="disabled || loading"
       [class]="buttonClasses"
+      [class.icon-only]="iconOnly"
       (click)="onClick($event)"
     >
-      <span *ngIf="loading" class="button-spinner"></span>
-      <span [class.button-content-loading]="loading">
+      <!-- Loading Spinner -->
+      <span *ngIf="loading" class="button-spinner">
+        <app-icon name="loader-2" [size]="spinnerSize" class="animate-spin" />
+      </span>
+      
+      <!-- Icon (left) -->
+      <app-icon 
+        *ngIf="icon && !loading && iconPosition === 'left'" 
+        [name]="icon" 
+        [size]="iconSize"
+        class="button-icon"
+      />
+      
+      <!-- Content -->
+      <span class="button-content" [class.loading]="loading" [class.sr-only]="iconOnly">
         <ng-content></ng-content>
       </span>
+      
+      <!-- Icon (right) -->
+      <app-icon 
+        *ngIf="icon && !loading && iconPosition === 'right'" 
+        [name]="icon" 
+        [size]="iconSize"
+        class="button-icon"
+      />
     </button>
   `,
   styles: [`
@@ -44,90 +87,110 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
       justify-content: center;
       gap: var(--spacing-sm);
       font-family: inherit;
-      font-weight: var(--font-weight-medium);
+      font-weight: var(--font-weight-semibold);
       border: none;
-      border-radius: var(--border-radius-md);
+      border-radius: var(--border-radius-lg);
       cursor: pointer;
       transition: all var(--transition-fast);
       white-space: nowrap;
+      position: relative;
+      overflow: hidden;
       
-      &:focus {
-        outline: 2px solid var(--color-primary-light);
+      &:focus-visible {
+        outline: 2px solid var(--color-primary);
         outline-offset: 2px;
       }
       
       &:disabled {
-        opacity: 0.6;
+        opacity: 0.5;
         cursor: not-allowed;
       }
-    }
-    
-    /* Tamanhos */
-    .btn-sm {
-      padding: var(--spacing-xs) var(--spacing-sm);
-      font-size: var(--font-size-sm);
-      min-height: 32px;
-    }
-    
-    .btn-md {
-      padding: var(--spacing-sm) var(--spacing-md);
-      font-size: var(--font-size-base);
-      min-height: 40px;
-    }
-    
-    .btn-lg {
-      padding: var(--spacing-md) var(--spacing-lg);
-      font-size: var(--font-size-lg);
-      min-height: 48px;
-    }
-    
-    /* Variantes */
-    .btn-primary {
-      background-color: var(--color-primary);
-      color: var(--color-primary-contrast);
       
-      &:hover:not(:disabled) {
-        background-color: var(--color-primary-dark);
-      }
-      
-      &:active:not(:disabled) {
+      &:not(:disabled):active {
         transform: scale(0.98);
       }
     }
     
+    /* ===== Tamanhos ===== */
+    .btn-sm {
+      padding: 8px 14px;
+      font-size: var(--font-size-sm);
+      min-height: 34px;
+      gap: 6px;
+      
+      &.icon-only {
+        padding: 8px;
+        min-width: 34px;
+      }
+    }
+    
+    .btn-md {
+      padding: 10px 18px;
+      font-size: var(--font-size-base);
+      min-height: 42px;
+      
+      &.icon-only {
+        padding: 10px;
+        min-width: 42px;
+      }
+    }
+    
+    .btn-lg {
+      padding: 14px 24px;
+      font-size: var(--font-size-lg);
+      min-height: 50px;
+      
+      &.icon-only {
+        padding: 14px;
+        min-width: 50px;
+      }
+    }
+    
+    /* ===== Variantes ===== */
+    .btn-primary {
+      background: var(--bg-gradient-primary);
+      color: var(--color-primary-contrast);
+      box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      
+      &:hover:not(:disabled) {
+        box-shadow: var(--shadow-primary), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        filter: brightness(1.05);
+      }
+    }
+    
     .btn-secondary {
-      background-color: var(--color-secondary);
+      background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
       color: white;
       
       &:hover:not(:disabled) {
-        background-color: var(--color-secondary-dark);
+        filter: brightness(1.05);
       }
     }
     
     .btn-success {
-      background-color: var(--color-success);
+      background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%);
       color: white;
       
       &:hover:not(:disabled) {
-        background-color: var(--color-success-dark);
+        box-shadow: var(--shadow-success);
       }
     }
     
     .btn-warning {
-      background-color: var(--color-warning);
+      background: linear-gradient(135deg, var(--color-warning) 0%, var(--color-warning-dark) 100%);
       color: white;
       
       &:hover:not(:disabled) {
-        background-color: var(--color-warning-dark);
+        filter: brightness(1.05);
       }
     }
     
     .btn-danger {
-      background-color: var(--color-danger);
+      background: linear-gradient(135deg, var(--color-danger) 0%, var(--color-danger-dark) 100%);
       color: white;
       
       &:hover:not(:disabled) {
-        background-color: var(--color-danger-dark);
+        box-shadow: var(--shadow-danger);
       }
     }
     
@@ -147,27 +210,81 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
       color: var(--color-text-primary);
       
       &:hover:not(:disabled) {
-        background-color: var(--color-background);
+        background-color: var(--color-surface-variant);
       }
     }
     
-    /* Full width */
+    /* Ghost Light - para uso em headers escuros */
+    .btn-ghost-light {
+      background-color: transparent;
+      color: rgba(255, 255, 255, 0.9);
+      
+      &:hover:not(:disabled) {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
+      }
+      
+      &:focus-visible {
+        outline-color: rgba(255, 255, 255, 0.5);
+      }
+    }
+    
+    .btn-link {
+      background-color: transparent;
+      color: var(--color-primary);
+      padding: 0;
+      min-height: auto;
+      font-weight: var(--font-weight-medium);
+      
+      &:hover:not(:disabled) {
+        text-decoration: underline;
+      }
+    }
+    
+    /* ===== Full width ===== */
     .btn-block {
       width: 100%;
     }
     
-    /* Loading */
+    /* ===== Loading ===== */
     .button-spinner {
-      width: 16px;
-      height: 16px;
-      border: 2px solid transparent;
-      border-top-color: currentColor;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
+      display: inline-flex;
+      
+      .animate-spin {
+        animation: spin 0.8s linear infinite;
+      }
     }
     
-    .button-content-loading {
+    .button-content.loading {
       opacity: 0.7;
+    }
+    
+    /* ===== Icon Only ===== */
+    .icon-only {
+      .button-content {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+    }
+    
+    /* Screen reader only class */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
     
     @keyframes spin {
@@ -184,6 +301,9 @@ export class ButtonComponent {
   @Input() disabled = false;
   @Input() loading = false;
   @Input() block = false;
+  @Input() icon = '';
+  @Input() iconPosition: 'left' | 'right' = 'left';
+  @Input() iconOnly = false;
   
   @Output() clicked = new EventEmitter<MouseEvent>();
   
@@ -200,10 +320,27 @@ export class ButtonComponent {
     return classes.join(' ');
   }
   
+  get iconSize(): number {
+    const sizes: Record<ButtonSize, number> = {
+      sm: 16,
+      md: 18,
+      lg: 20
+    };
+    return sizes[this.size];
+  }
+  
+  get spinnerSize(): number {
+    const sizes: Record<ButtonSize, number> = {
+      sm: 14,
+      md: 16,
+      lg: 18
+    };
+    return sizes[this.size];
+  }
+  
   onClick(event: MouseEvent): void {
     if (!this.disabled && !this.loading) {
       this.clicked.emit(event);
     }
   }
 }
-

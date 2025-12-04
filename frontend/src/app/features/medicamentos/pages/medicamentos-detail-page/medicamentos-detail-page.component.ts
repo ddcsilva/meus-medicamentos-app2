@@ -1,34 +1,32 @@
-import { CommonModule } from "@angular/common";
-import { Component, OnInit, computed, inject, signal } from "@angular/core";
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, computed, inject, signal, ViewChild } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
   Validators,
-} from "@angular/forms";
-import { ActivatedRoute, Router, RouterLink } from "@angular/router";
-import { NotificationService } from "../../../../core/services/notification.service";
-import { ButtonComponent } from "../../../../shared/ui/button/button.component";
-import { CardComponent } from "../../../../shared/ui/card/card.component";
-import { LoadingComponent } from "../../../../shared/ui/loading/loading.component";
-import { StatusBadgeComponent } from "../../../../shared/ui/status-badge/status-badge.component";
-import { QuantidadeControlComponent } from "../../components/quantidade-control/quantidade-control.component";
+} from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { NotificationService } from '../../../../core/services/notification.service';
+import { ButtonComponent } from '../../../../shared/ui/button/button.component';
+import { CardComponent } from '../../../../shared/ui/card/card.component';
+import { IconComponent } from '../../../../shared/ui/icon/icon.component';
+import { LoadingComponent } from '../../../../shared/ui/loading/loading.component';
+import { StatusBadgeComponent } from '../../../../shared/ui/status-badge/status-badge.component';
+import { ConfirmModalComponent, ConfirmModalConfig } from '../../../../shared/ui/confirm-modal/confirm-modal.component';
+import { QuantidadeControlComponent } from '../../components/quantidade-control/quantidade-control.component';
 import {
   Medicamento,
   TipoMedicamento,
   UpdateMedicamentoDto,
-} from "../../models";
-import { MedicamentosStore } from "../../services/medicamentos.store";
+} from '../../models';
+import { MedicamentosStore } from '../../services/medicamentos.store';
 
 /**
  * Página de detalhes e edição de medicamento.
- *
- * Modos:
- * - Visualização: exibe todos os dados do medicamento
- * - Edição: formulário para atualizar dados
  */
 @Component({
-  selector: "app-medicamentos-detail-page",
+  selector: 'app-medicamentos-detail-page',
   standalone: true,
   imports: [
     CommonModule,
@@ -39,6 +37,8 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
     StatusBadgeComponent,
     LoadingComponent,
     QuantidadeControlComponent,
+    IconComponent,
+    ConfirmModalComponent,
   ],
   template: `
     <div class="medicamentos-detail-page">
@@ -46,400 +46,435 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
       <div class="page-header">
         <div class="header-nav">
           <a routerLink="/medicamentos" class="back-link">
-            ← Voltar para lista
+            <app-icon name="arrow-left" [size]="16" />
+            Voltar para lista
           </a>
         </div>
         <div class="header-content">
           <h1>
-            {{
-              isEditMode() ? "Editar Medicamento" : "Detalhes do Medicamento"
-            }}
+            <app-icon [name]="isEditMode() ? 'edit-2' : 'pill'" [size]="28" class="header-icon" />
+            {{ isEditMode() ? 'Editar Medicamento' : 'Detalhes do Medicamento' }}
           </h1>
         </div>
       </div>
 
       <!-- Loading -->
-      <div *ngIf="store.loading() && !medicamento()" class="loading-container">
-        <app-loading
-          size="lg"
-          text="Carregando medicamento..."
-          [vertical]="true"
-        ></app-loading>
-      </div>
+      @if (store.loading() && !medicamento()) {
+        <div class="loading-container">
+          <app-loading
+            size="lg"
+            text="Carregando medicamento..."
+            [vertical]="true"
+          />
+        </div>
+      }
 
       <!-- Erro -->
-      <div *ngIf="store.hasError()" class="error-alert">
-        <span class="error-icon">⚠️</span>
-        <span>{{ store.error()?.message }}</span>
-        <app-button variant="ghost" size="sm" (click)="store.clearError()">
-          Fechar
-        </app-button>
-      </div>
+      @if (store.hasError()) {
+        <div class="error-alert">
+          <app-icon name="alert-circle" [size]="20" />
+          <span>{{ store.error()?.message }}</span>
+          <app-button variant="ghost" size="sm" (clicked)="store.clearError()" icon="x" [iconOnly]="true">
+            Fechar
+          </app-button>
+        </div>
+      }
 
       <!-- Conteúdo -->
-      <div *ngIf="medicamento()" class="content">
-        <!-- Modo Visualização -->
-        <app-card *ngIf="!isEditMode()" variant="elevated">
-          <div class="detail-content">
-            <!-- Header do medicamento -->
-            <div class="detail-header">
-              <div class="header-info">
-                <h2 class="med-nome">{{ medicamento()!.nome }}</h2>
-                <p class="med-droga">{{ medicamento()!.droga }}</p>
-                <span *ngIf="medicamento()!.generico" class="med-generico">
-                  Genérico
-                </span>
-              </div>
-              <app-status-badge
-                [status]="medicamento()!.statusValidade"
-                size="lg"
-              ></app-status-badge>
-            </div>
-
-            <!-- Informações principais -->
-            <div class="info-grid">
-              <div class="info-card">
-                <span class="info-label">Marca</span>
-                <span class="info-value">{{ medicamento()!.marca }}</span>
-              </div>
-              <div class="info-card">
-                <span class="info-label">Laboratório</span>
-                <span class="info-value">{{ medicamento()!.laboratorio }}</span>
-              </div>
-              <div class="info-card">
-                <span class="info-label">Tipo</span>
-                <span class="info-value">{{
-                  formatarTipo(medicamento()!.tipo)
-                }}</span>
-              </div>
-              <div class="info-card">
-                <span class="info-label">Validade</span>
-                <span
-                  class="info-value"
-                  [class.vencido]="medicamento()!.statusValidade === 'vencido'"
-                >
-                  {{ formatarData(medicamento()!.validade) }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Quantidade -->
-            <div class="quantity-section">
-              <h3>Quantidade em Estoque</h3>
-              <div class="quantity-display-large">
-                <app-quantidade-control
-                  [quantidade]="medicamento()!.quantidadeAtual"
-                  [quantidadeTotal]="medicamento()!.quantidadeTotal"
-                  [loading]="store.isItemLoading(medicamento()!.id)"
-                  [min]="0"
-                  size="lg"
-                  [showTotal]="true"
-                  (incrementar)="incrementarRapido()"
-                  (decrementar)="decrementarRapido()"
-                />
-                <span class="quantity-label">unidades</span>
-              </div>
-            </div>
-
-            <!-- Observações -->
-            <div *ngIf="medicamento()!.observacoes" class="observacoes-section">
-              <h3>Observações</h3>
-              <p>{{ medicamento()!.observacoes }}</p>
-            </div>
-
-            <!-- Metadados -->
-            <div class="metadata-section">
-              <span class="metadata-item">
-                Cadastrado em: {{ formatarData(medicamento()!.criadoEm) }}
-              </span>
-              <span class="metadata-item">
-                Última atualização:
-                {{ formatarData(medicamento()!.atualizadoEm) }}
-              </span>
-            </div>
-
-            <!-- Ações -->
-            <div class="detail-actions">
-              <app-button variant="outline" (click)="ativarModoEdicao()">
-                Editar
-              </app-button>
-              <app-button
-                variant="danger"
-                [loading]="excluindo()"
-                (click)="confirmarExclusao()"
-              >
-                Excluir
-              </app-button>
-            </div>
-          </div>
-        </app-card>
-
-        <!-- Modo Edição -->
-        <app-card *ngIf="isEditMode()" variant="elevated">
-          <form
-            [formGroup]="form"
-            (ngSubmit)="onSubmit()"
-            class="form-container"
-          >
-            <!-- Seção: Identificação -->
-            <div class="form-section">
-              <h3 class="section-title">Identificação</h3>
-
-              <div class="form-row">
-                <div class="form-field">
-                  <label for="nome" class="form-label">
-                    Nome do Medicamento <span class="required">*</span>
-                  </label>
-                  <input
-                    id="nome"
-                    type="text"
-                    formControlName="nome"
-                    class="form-input"
-                    [class.has-error]="isFieldInvalid('nome')"
-                  />
-                  <span *ngIf="isFieldInvalid('nome')" class="field-error">
-                    {{ getFieldError("nome") }}
-                  </span>
-                </div>
-              </div>
-
-              <div class="form-row two-cols">
-                <div class="form-field">
-                  <label for="droga" class="form-label">
-                    Princípio Ativo / Droga <span class="required">*</span>
-                  </label>
-                  <input
-                    id="droga"
-                    type="text"
-                    formControlName="droga"
-                    class="form-input"
-                    [class.has-error]="isFieldInvalid('droga')"
-                  />
-                  <span *ngIf="isFieldInvalid('droga')" class="field-error">
-                    {{ getFieldError("droga") }}
-                  </span>
+      @if (medicamento()) {
+        <div class="content">
+          <!-- Modo Visualização -->
+          @if (!isEditMode()) {
+            <app-card variant="elevated">
+              <div class="detail-content">
+                <!-- Header do medicamento -->
+                <div class="detail-header">
+                  <div class="header-info">
+                    <h2 class="med-nome">{{ medicamento()!.nome }}</h2>
+                    <p class="med-droga">{{ medicamento()!.droga }}</p>
+                    @if (medicamento()!.generico) {
+                      <span class="med-generico">
+                        <app-icon name="badge-check" [size]="12" />
+                        Genérico
+                      </span>
+                    }
+                  </div>
+                  <app-status-badge [status]="medicamento()!.statusValidade" size="lg" />
                 </div>
 
-                <div class="form-field">
-                  <label class="form-label">É Genérico?</label>
-                  <div class="checkbox-wrapper">
-                    <input
-                      id="generico"
-                      type="checkbox"
-                      formControlName="generico"
-                      class="form-checkbox"
-                    />
-                    <label for="generico" class="checkbox-label">
-                      Sim, é medicamento genérico
-                    </label>
+                <!-- Informações principais -->
+                <div class="info-grid">
+                  <div class="info-card">
+                    <app-icon name="box" [size]="18" class="info-icon" />
+                    <div>
+                      <span class="info-label">Marca</span>
+                      <span class="info-value">{{ medicamento()!.marca }}</span>
+                    </div>
+                  </div>
+                  <div class="info-card">
+                    <app-icon name="package" [size]="18" class="info-icon" />
+                    <div>
+                      <span class="info-label">Laboratório</span>
+                      <span class="info-value">{{ medicamento()!.laboratorio }}</span>
+                    </div>
+                  </div>
+                  <div class="info-card">
+                    <app-icon name="pill" [size]="18" class="info-icon" />
+                    <div>
+                      <span class="info-label">Tipo</span>
+                      <span class="info-value">{{ formatarTipo(medicamento()!.tipo) }}</span>
+                    </div>
+                  </div>
+                  <div class="info-card">
+                    <app-icon name="calendar" [size]="18" class="info-icon" />
+                    <div>
+                      <span class="info-label">Validade</span>
+                      <span class="info-value" [class.vencido]="medicamento()!.statusValidade === 'vencido'">
+                        {{ formatarData(medicamento()!.validade) }}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <!-- Seção: Fabricante -->
-            <div class="form-section">
-              <h3 class="section-title">Fabricante</h3>
+                <!-- Quantidade -->
+                <div class="quantity-section">
+                  <h3>
+                    <app-icon name="hash" [size]="16" />
+                    Quantidade em Estoque
+                  </h3>
+                  <div class="quantity-display-large">
+                    <app-quantidade-control
+                      [quantidade]="medicamento()!.quantidadeAtual"
+                      [quantidadeTotal]="medicamento()!.quantidadeTotal"
+                      [loading]="store.isItemLoading(medicamento()!.id)"
+                      [min]="0"
+                      size="lg"
+                      [showTotal]="true"
+                      (incrementar)="incrementarRapido()"
+                      (decrementar)="decrementarRapido()"
+                    />
+                    <span class="quantity-label">unidades</span>
+                  </div>
+                </div>
 
-              <div class="form-row two-cols">
-                <div class="form-field">
-                  <label for="marca" class="form-label">
-                    Marca <span class="required">*</span>
-                  </label>
-                  <input
-                    id="marca"
-                    type="text"
-                    formControlName="marca"
-                    class="form-input"
-                    [class.has-error]="isFieldInvalid('marca')"
-                  />
-                  <span *ngIf="isFieldInvalid('marca')" class="field-error">
-                    {{ getFieldError("marca") }}
+                <!-- Observações -->
+                @if (medicamento()!.observacoes) {
+                  <div class="observacoes-section">
+                    <h3>
+                      <app-icon name="file-text" [size]="16" />
+                      Observações
+                    </h3>
+                    <p>{{ medicamento()!.observacoes }}</p>
+                  </div>
+                }
+
+                <!-- Metadados -->
+                <div class="metadata-section">
+                  <span class="metadata-item">
+                    <app-icon name="clock" [size]="12" />
+                    Cadastrado em: {{ formatarData(medicamento()!.criadoEm) }}
+                  </span>
+                  <span class="metadata-item">
+                    <app-icon name="refresh-cw" [size]="12" />
+                    Última atualização: {{ formatarData(medicamento()!.atualizadoEm) }}
                   </span>
                 </div>
 
-                <div class="form-field">
-                  <label for="laboratorio" class="form-label">
-                    Laboratório <span class="required">*</span>
-                  </label>
-                  <input
-                    id="laboratorio"
-                    type="text"
-                    formControlName="laboratorio"
-                    class="form-input"
-                    [class.has-error]="isFieldInvalid('laboratorio')"
-                  />
-                  <span
-                    *ngIf="isFieldInvalid('laboratorio')"
-                    class="field-error"
+                <!-- Ações -->
+                <div class="detail-actions">
+                  <app-button variant="outline" (clicked)="ativarModoEdicao()" icon="edit-2">
+                    Editar
+                  </app-button>
+                  <app-button
+                    variant="danger"
+                    [loading]="excluindo()"
+                    (clicked)="abrirModalExclusao()"
+                    icon="trash-2"
                   >
-                    {{ getFieldError("laboratorio") }}
-                  </span>
+                    Excluir
+                  </app-button>
                 </div>
               </div>
-            </div>
+            </app-card>
+          }
 
-            <!-- Seção: Detalhes -->
-            <div class="form-section">
-              <h3 class="section-title">Detalhes</h3>
+          <!-- Modo Edição -->
+          @if (isEditMode()) {
+            <app-card variant="elevated">
+              <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-container">
+                <!-- Seção: Identificação -->
+                <div class="form-section">
+                  <h3 class="section-title">
+                    <app-icon name="pill" [size]="18" />
+                    Identificação
+                  </h3>
 
-              <div class="form-row two-cols">
-                <div class="form-field">
-                  <label for="tipo" class="form-label">
-                    Tipo <span class="required">*</span>
-                  </label>
-                  <select
-                    id="tipo"
-                    formControlName="tipo"
-                    class="form-select"
-                    [class.has-error]="isFieldInvalid('tipo')"
+                  <div class="form-row">
+                    <div class="form-field">
+                      <label for="nome" class="form-label">
+                        Nome do Medicamento <span class="required">*</span>
+                      </label>
+                      <input
+                        id="nome"
+                        type="text"
+                        formControlName="nome"
+                        class="form-input"
+                        [class.has-error]="isFieldInvalid('nome')"
+                      />
+                      @if (isFieldInvalid('nome')) {
+                        <span class="field-error">{{ getFieldError('nome') }}</span>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="form-row two-cols">
+                    <div class="form-field">
+                      <label for="droga" class="form-label">
+                        Princípio Ativo / Droga <span class="required">*</span>
+                      </label>
+                      <input
+                        id="droga"
+                        type="text"
+                        formControlName="droga"
+                        class="form-input"
+                        [class.has-error]="isFieldInvalid('droga')"
+                      />
+                      @if (isFieldInvalid('droga')) {
+                        <span class="field-error">{{ getFieldError('droga') }}</span>
+                      }
+                    </div>
+
+                    <div class="form-field">
+                      <label class="form-label">É Genérico?</label>
+                      <div class="checkbox-wrapper">
+                        <input
+                          id="generico"
+                          type="checkbox"
+                          formControlName="generico"
+                          class="form-checkbox"
+                        />
+                        <label for="generico" class="checkbox-label">
+                          Sim, é medicamento genérico
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Seção: Fabricante -->
+                <div class="form-section">
+                  <h3 class="section-title">
+                    <app-icon name="package" [size]="18" />
+                    Fabricante
+                  </h3>
+
+                  <div class="form-row two-cols">
+                    <div class="form-field">
+                      <label for="marca" class="form-label">
+                        Marca <span class="required">*</span>
+                      </label>
+                      <input
+                        id="marca"
+                        type="text"
+                        formControlName="marca"
+                        class="form-input"
+                        [class.has-error]="isFieldInvalid('marca')"
+                      />
+                      @if (isFieldInvalid('marca')) {
+                        <span class="field-error">{{ getFieldError('marca') }}</span>
+                      }
+                    </div>
+
+                    <div class="form-field">
+                      <label for="laboratorio" class="form-label">
+                        Laboratório <span class="required">*</span>
+                      </label>
+                      <input
+                        id="laboratorio"
+                        type="text"
+                        formControlName="laboratorio"
+                        class="form-input"
+                        [class.has-error]="isFieldInvalid('laboratorio')"
+                      />
+                      @if (isFieldInvalid('laboratorio')) {
+                        <span class="field-error">{{ getFieldError('laboratorio') }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Seção: Detalhes -->
+                <div class="form-section">
+                  <h3 class="section-title">
+                    <app-icon name="info" [size]="18" />
+                    Detalhes
+                  </h3>
+
+                  <div class="form-row two-cols">
+                    <div class="form-field">
+                      <label for="tipo" class="form-label">
+                        Tipo <span class="required">*</span>
+                      </label>
+                      <select
+                        id="tipo"
+                        formControlName="tipo"
+                        class="form-select"
+                        [class.has-error]="isFieldInvalid('tipo')"
+                      >
+                        <option value="">Selecione...</option>
+                        @for (tipo of tiposMedicamento; track tipo) {
+                          <option [value]="tipo">{{ formatarTipo(tipo) }}</option>
+                        }
+                      </select>
+                      @if (isFieldInvalid('tipo')) {
+                        <span class="field-error">{{ getFieldError('tipo') }}</span>
+                      }
+                    </div>
+
+                    <div class="form-field">
+                      <label for="validade" class="form-label">
+                        Data de Validade <span class="required">*</span>
+                      </label>
+                      <input
+                        id="validade"
+                        type="date"
+                        formControlName="validade"
+                        class="form-input"
+                        [class.has-error]="isFieldInvalid('validade')"
+                      />
+                      @if (isFieldInvalid('validade')) {
+                        <span class="field-error">{{ getFieldError('validade') }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Seção: Quantidade -->
+                <div class="form-section">
+                  <h3 class="section-title">
+                    <app-icon name="hash" [size]="18" />
+                    Quantidade
+                  </h3>
+
+                  <div class="form-row two-cols">
+                    <div class="form-field">
+                      <label for="quantidadeTotal" class="form-label">
+                        Quantidade Total <span class="required">*</span>
+                      </label>
+                      <input
+                        id="quantidadeTotal"
+                        type="number"
+                        formControlName="quantidadeTotal"
+                        class="form-input"
+                        [class.has-error]="isFieldInvalid('quantidadeTotal')"
+                        min="1"
+                      />
+                      @if (isFieldInvalid('quantidadeTotal')) {
+                        <span class="field-error">{{ getFieldError('quantidadeTotal') }}</span>
+                      }
+                    </div>
+
+                    <div class="form-field">
+                      <label for="quantidadeAtual" class="form-label">
+                        Quantidade Atual <span class="required">*</span>
+                      </label>
+                      <input
+                        id="quantidadeAtual"
+                        type="number"
+                        formControlName="quantidadeAtual"
+                        class="form-input"
+                        [class.has-error]="isFieldInvalid('quantidadeAtual')"
+                        min="0"
+                      />
+                      @if (isFieldInvalid('quantidadeAtual')) {
+                        <span class="field-error">{{ getFieldError('quantidadeAtual') }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Seção: Observações -->
+                <div class="form-section">
+                  <h3 class="section-title">
+                    <app-icon name="file-text" [size]="18" />
+                    Observações
+                  </h3>
+
+                  <div class="form-row">
+                    <div class="form-field">
+                      <label for="observacoes" class="form-label">
+                        Observações (opcional)
+                      </label>
+                      <textarea
+                        id="observacoes"
+                        formControlName="observacoes"
+                        class="form-textarea"
+                        rows="3"
+                      ></textarea>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Ações -->
+                <div class="form-actions">
+                  <app-button
+                    type="button"
+                    variant="ghost"
+                    (clicked)="cancelarEdicao()"
+                    icon="x"
                   >
-                    <option value="">Selecione...</option>
-                    <option
-                      *ngFor="let tipo of tiposMedicamento"
-                      [value]="tipo"
-                    >
-                      {{ formatarTipo(tipo) }}
-                    </option>
-                  </select>
-                  <span *ngIf="isFieldInvalid('tipo')" class="field-error">
-                    {{ getFieldError("tipo") }}
-                  </span>
-                </div>
-
-                <div class="form-field">
-                  <label for="validade" class="form-label">
-                    Data de Validade <span class="required">*</span>
-                  </label>
-                  <input
-                    id="validade"
-                    type="date"
-                    formControlName="validade"
-                    class="form-input"
-                    [class.has-error]="isFieldInvalid('validade')"
-                  />
-                  <span *ngIf="isFieldInvalid('validade')" class="field-error">
-                    {{ getFieldError("validade") }}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Seção: Quantidade -->
-            <div class="form-section">
-              <h3 class="section-title">Quantidade</h3>
-
-              <div class="form-row two-cols">
-                <div class="form-field">
-                  <label for="quantidadeTotal" class="form-label">
-                    Quantidade Total <span class="required">*</span>
-                  </label>
-                  <input
-                    id="quantidadeTotal"
-                    type="number"
-                    formControlName="quantidadeTotal"
-                    class="form-input"
-                    [class.has-error]="isFieldInvalid('quantidadeTotal')"
-                    min="1"
-                  />
-                  <span
-                    *ngIf="isFieldInvalid('quantidadeTotal')"
-                    class="field-error"
+                    Cancelar
+                  </app-button>
+                  <app-button
+                    type="submit"
+                    variant="primary"
+                    [loading]="store.loading()"
+                    [disabled]="form.invalid || store.loading()"
+                    icon="check"
                   >
-                    {{ getFieldError("quantidadeTotal") }}
-                  </span>
+                    {{ store.loading() ? 'Salvando...' : 'Salvar Alterações' }}
+                  </app-button>
                 </div>
-
-                <div class="form-field">
-                  <label for="quantidadeAtual" class="form-label">
-                    Quantidade Atual <span class="required">*</span>
-                  </label>
-                  <input
-                    id="quantidadeAtual"
-                    type="number"
-                    formControlName="quantidadeAtual"
-                    class="form-input"
-                    [class.has-error]="isFieldInvalid('quantidadeAtual')"
-                    min="0"
-                  />
-                  <span
-                    *ngIf="isFieldInvalid('quantidadeAtual')"
-                    class="field-error"
-                  >
-                    {{ getFieldError("quantidadeAtual") }}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Seção: Observações -->
-            <div class="form-section">
-              <h3 class="section-title">Observações</h3>
-
-              <div class="form-row">
-                <div class="form-field">
-                  <label for="observacoes" class="form-label">
-                    Observações (opcional)
-                  </label>
-                  <textarea
-                    id="observacoes"
-                    formControlName="observacoes"
-                    class="form-textarea"
-                    rows="3"
-                  ></textarea>
-                </div>
-              </div>
-            </div>
-
-            <!-- Ações -->
-            <div class="form-actions">
-              <app-button
-                type="button"
-                variant="outline"
-                (click)="cancelarEdicao()"
-              >
-                Cancelar
-              </app-button>
-              <app-button
-                type="submit"
-                variant="primary"
-                [loading]="store.loading()"
-                [disabled]="form.invalid || store.loading()"
-              >
-                {{ store.loading() ? "Salvando..." : "Salvar Alterações" }}
-              </app-button>
-            </div>
-          </form>
-        </app-card>
-      </div>
+              </form>
+            </app-card>
+          }
+        </div>
+      }
 
       <!-- Medicamento não encontrado -->
-      <div
-        *ngIf="!store.loading() && !medicamento() && !store.hasError()"
-        class="not-found"
-      >
-        <div class="not-found-icon">🔍</div>
-        <h2>Medicamento não encontrado</h2>
-        <p>
-          O medicamento que você está procurando não existe ou foi removido.
-        </p>
-        <app-button variant="primary" routerLink="/medicamentos">
-          Voltar para lista
-        </app-button>
-      </div>
+      @if (!store.loading() && !medicamento() && !store.hasError()) {
+        <div class="not-found">
+          <div class="not-found-icon">
+            <app-icon name="search-x" [size]="48" />
+          </div>
+          <h2>Medicamento não encontrado</h2>
+          <p>O medicamento que você está procurando não existe ou foi removido.</p>
+          <app-button variant="primary" routerLink="/medicamentos" icon="arrow-left">
+            Voltar para lista
+          </app-button>
+        </div>
+      }
+
+      <!-- Modal de Confirmação de Exclusão -->
+      <app-confirm-modal
+        #confirmModal
+        [config]="deleteModalConfig"
+        (confirmed)="confirmarExclusao()"
+        (cancelled)="confirmModal.close()"
+      />
     </div>
   `,
   styles: [
     `
       .medicamentos-detail-page {
-        padding: var(--spacing-lg) 0;
+        padding: var(--spacing-md) 0;
         max-width: 800px;
         margin: 0 auto;
       }
 
       /* Header */
       .page-header {
-        margin-bottom: var(--spacing-lg);
+        margin-bottom: var(--spacing-xl);
       }
 
       .header-nav {
@@ -447,18 +482,31 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
       }
 
       .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
         color: var(--color-primary);
         text-decoration: none;
         font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
+        transition: color var(--transition-fast);
 
         &:hover {
-          text-decoration: underline;
+          color: var(--color-primary-dark);
         }
       }
 
-      h1 {
+      .header-content h1 {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
         color: var(--color-text-primary);
         margin: 0;
+        font-size: var(--font-size-2xl);
+      }
+
+      .header-icon {
+        color: var(--color-primary);
       }
 
       /* Loading */
@@ -476,14 +524,19 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
         padding: var(--spacing-md);
         background-color: var(--color-danger-bg);
         border: 1px solid var(--color-danger-light);
-        border-radius: var(--border-radius-md);
+        border-radius: var(--border-radius-lg);
         margin-bottom: var(--spacing-lg);
-        color: var(--color-vencido-text);
+        color: var(--color-danger-text);
         font-size: var(--font-size-sm);
-      }
 
-      .error-icon {
-        font-size: var(--font-size-lg);
+        app-icon {
+          color: var(--color-danger);
+          flex-shrink: 0;
+        }
+
+        span {
+          flex: 1;
+        }
       }
 
       /* Detalhes */
@@ -520,12 +573,15 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
       }
 
       .med-generico {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        width: fit-content;
         font-size: var(--font-size-xs);
         color: var(--color-primary);
-        background: rgba(25, 118, 210, 0.1);
-        padding: 2px 8px;
-        border-radius: var(--border-radius-sm);
+        background: var(--color-primary-subtle);
+        padding: 4px 10px;
+        border-radius: var(--border-radius-full);
         font-weight: var(--font-weight-medium);
       }
 
@@ -537,11 +593,23 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
 
       .info-card {
         display: flex;
-        flex-direction: column;
-        gap: var(--spacing-xs);
+        align-items: flex-start;
+        gap: var(--spacing-sm);
         padding: var(--spacing-md);
-        background: var(--color-background);
-        border-radius: var(--border-radius-md);
+        background: var(--color-surface-variant);
+        border-radius: var(--border-radius-lg);
+      }
+
+      .info-icon {
+        color: var(--color-text-hint);
+        margin-top: 2px;
+        flex-shrink: 0;
+      }
+
+      .info-card > div {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
       }
 
       .info-label {
@@ -558,21 +626,25 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
       }
 
       .info-value.vencido {
-        color: var(--color-vencido);
+        color: var(--color-danger);
       }
 
       /* Quantidade */
       .quantity-section {
         text-align: center;
-        padding: var(--spacing-lg);
-        background: var(--color-background);
-        border-radius: var(--border-radius-lg);
+        padding: var(--spacing-xl);
+        background: var(--color-surface-variant);
+        border-radius: var(--border-radius-xl);
       }
 
       .quantity-section h3 {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-xs);
         font-size: var(--font-size-sm);
         color: var(--color-text-secondary);
-        margin: 0 0 var(--spacing-md) 0;
+        margin: 0 0 var(--spacing-lg) 0;
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
@@ -581,35 +653,7 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: var(--spacing-sm);
-      }
-
-      .quantity-controls {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-lg);
-      }
-
-      .quantity-value {
-        display: flex;
-        align-items: baseline;
-        gap: var(--spacing-xs);
-      }
-
-      .quantity-value .current {
-        font-size: 3rem;
-        font-weight: var(--font-weight-bold);
-        color: var(--color-text-primary);
-      }
-
-      .quantity-value .separator {
-        font-size: 2rem;
-        color: var(--color-text-hint);
-      }
-
-      .quantity-value .total {
-        font-size: 1.5rem;
-        color: var(--color-text-secondary);
+        gap: var(--spacing-md);
       }
 
       .quantity-label {
@@ -619,15 +663,18 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
 
       /* Observações */
       .observacoes-section {
-        padding: var(--spacing-md);
-        background: var(--color-background);
-        border-radius: var(--border-radius-md);
+        padding: var(--spacing-lg);
+        background: var(--color-surface-variant);
+        border-radius: var(--border-radius-lg);
       }
 
       .observacoes-section h3 {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
         font-size: var(--font-size-sm);
         color: var(--color-text-secondary);
-        margin: 0 0 var(--spacing-sm) 0;
+        margin: 0 0 var(--spacing-md) 0;
         text-transform: uppercase;
       }
 
@@ -635,18 +682,22 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
         margin: 0;
         color: var(--color-text-primary);
         white-space: pre-wrap;
+        line-height: var(--line-height-relaxed);
       }
 
       /* Metadados */
       .metadata-section {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--spacing-md);
-        padding-top: var(--spacing-md);
+        gap: var(--spacing-lg);
+        padding-top: var(--spacing-lg);
         border-top: 1px solid var(--color-border-light);
       }
 
       .metadata-item {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
         font-size: var(--font-size-xs);
         color: var(--color-text-hint);
       }
@@ -674,12 +725,19 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
       }
 
       .section-title {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
         font-size: var(--font-size-base);
         font-weight: var(--font-weight-semibold);
         color: var(--color-text-primary);
         margin: 0;
         padding-bottom: var(--spacing-sm);
         border-bottom: 1px solid var(--color-border-light);
+
+        app-icon {
+          color: var(--color-primary);
+        }
       }
 
       .form-row {
@@ -717,42 +775,47 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
       .form-select,
       .form-textarea {
         width: 100%;
-        padding: var(--spacing-sm) var(--spacing-md);
+        padding: 12px var(--spacing-md);
         font-family: inherit;
         font-size: var(--font-size-base);
         color: var(--color-text-primary);
         background-color: var(--color-surface);
-        border: 1px solid var(--color-border);
-        border-radius: var(--border-radius-md);
+        border: 2px solid var(--color-border);
+        border-radius: var(--border-radius-lg);
         transition: all var(--transition-fast);
 
         &:focus {
           outline: none;
           border-color: var(--color-primary);
-          box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+          box-shadow: 0 0 0 4px var(--color-primary-subtle);
         }
 
         &.has-error {
           border-color: var(--color-danger);
+
+          &:focus {
+            box-shadow: 0 0 0 4px var(--color-danger-bg);
+          }
         }
       }
 
       .form-textarea {
         resize: vertical;
-        min-height: 80px;
+        min-height: 100px;
       }
 
       .checkbox-wrapper {
         display: flex;
         align-items: center;
         gap: var(--spacing-sm);
-        padding: var(--spacing-sm) 0;
+        padding: var(--spacing-md) 0;
       }
 
       .form-checkbox {
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
         cursor: pointer;
+        accent-color: var(--color-primary);
       }
 
       .checkbox-label {
@@ -762,6 +825,9 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
       }
 
       .field-error {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
         font-size: var(--font-size-xs);
         color: var(--color-danger);
       }
@@ -785,8 +851,15 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
       }
 
       .not-found-icon {
-        font-size: 4rem;
+        width: 96px;
+        height: 96px;
+        border-radius: var(--border-radius-full);
+        background: var(--color-surface-variant);
+        display: flex;
+        align-items: center;
+        justify-content: center;
         margin-bottom: var(--spacing-lg);
+        color: var(--color-text-hint);
       }
 
       .not-found h2 {
@@ -823,94 +896,75 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
         .form-actions app-button {
           width: 100%;
         }
-
-        .quantity-value .current {
-          font-size: 2.5rem;
-        }
       }
     `,
   ],
 })
 export class MedicamentosDetailPageComponent implements OnInit {
+  @ViewChild('confirmModal') confirmModal!: ConfirmModalComponent;
+
   readonly store = inject(MedicamentosStore);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly notification = inject(NotificationService);
 
-  /** ID do medicamento */
   private medicamentoId: string | null = null;
-
-  /** Modo de edição ativo */
   readonly isEditMode = signal(false);
-
-  /** Estado de exclusão */
   readonly excluindo = signal(false);
-
-  /** Medicamento atual (computed do store) */
   readonly medicamento = computed(() => this.store.selected());
 
-  /** Tipos de medicamento disponíveis */
+  readonly deleteModalConfig: ConfirmModalConfig = {
+    title: 'Excluir Medicamento',
+    message: 'Tem certeza que deseja excluir este medicamento? Esta ação não pode ser desfeita.',
+    confirmText: 'Excluir',
+    cancelText: 'Cancelar',
+    variant: 'danger',
+    icon: 'trash-2'
+  };
+
   readonly tiposMedicamento: TipoMedicamento[] = [
-    "comprimido",
-    "capsula",
-    "liquido",
-    "spray",
-    "creme",
-    "pomada",
-    "gel",
-    "gotas",
-    "injetavel",
-    "outro",
+    'comprimido', 'capsula', 'liquido', 'spray', 'creme',
+    'pomada', 'gel', 'gotas', 'injetavel', 'outro',
   ];
 
-  /** Formulário reativo */
   readonly form: FormGroup = this.fb.group({
-    nome: ["", [Validators.required, Validators.minLength(3)]],
-    droga: ["", [Validators.required, Validators.minLength(3)]],
+    nome: ['', [Validators.required, Validators.minLength(3)]],
+    droga: ['', [Validators.required, Validators.minLength(3)]],
     generico: [false],
-    marca: ["", [Validators.required]],
-    laboratorio: ["", [Validators.required]],
-    tipo: ["", [Validators.required]],
-    validade: ["", [Validators.required]],
+    marca: ['', [Validators.required]],
+    laboratorio: ['', [Validators.required]],
+    tipo: ['', [Validators.required]],
+    validade: ['', [Validators.required]],
     quantidadeTotal: [null, [Validators.required, Validators.min(1)]],
     quantidadeAtual: [null, [Validators.required, Validators.min(0)]],
-    observacoes: [""],
+    observacoes: [''],
   });
 
   ngOnInit(): void {
-    // Obtém o ID da rota
     this.route.paramMap.subscribe((params) => {
-      this.medicamentoId = params.get("id");
+      this.medicamentoId = params.get('id');
       if (this.medicamentoId) {
         this.carregarMedicamento();
       }
     });
 
-    // Verifica se deve iniciar em modo de edição
     this.route.queryParamMap.subscribe((params) => {
-      if (params.get("editar") === "true") {
+      if (params.get('editar') === 'true') {
         this.isEditMode.set(true);
       }
     });
   }
 
-  /**
-   * Carrega o medicamento pelo ID.
-   */
   private async carregarMedicamento(): Promise<void> {
     if (!this.medicamentoId) return;
-
     const medicamento = await this.store.loadById(this.medicamentoId);
-
     if (medicamento) {
       this.preencherFormulario(medicamento);
+      this.deleteModalConfig.message = `Tem certeza que deseja excluir "${medicamento.nome}"? Esta ação não pode ser desfeita.`;
     }
   }
 
-  /**
-   * Preenche o formulário com os dados do medicamento.
-   */
   private preencherFormulario(medicamento: Medicamento): void {
     this.form.patchValue({
       nome: medicamento.nome,
@@ -922,153 +976,106 @@ export class MedicamentosDetailPageComponent implements OnInit {
       validade: medicamento.validade,
       quantidadeTotal: medicamento.quantidadeTotal,
       quantidadeAtual: medicamento.quantidadeAtual,
-      observacoes: medicamento.observacoes || "",
+      observacoes: medicamento.observacoes || '',
     });
   }
 
-  /**
-   * Ativa o modo de edição.
-   */
   ativarModoEdicao(): void {
     this.isEditMode.set(true);
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { editar: true },
-      queryParamsHandling: "merge",
+      queryParamsHandling: 'merge',
     });
   }
 
-  /**
-   * Cancela a edição e volta para visualização.
-   */
   cancelarEdicao(): void {
     this.isEditMode.set(false);
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { editar: null },
-      queryParamsHandling: "merge",
+      queryParamsHandling: 'merge',
     });
-
-    // Restaura os valores originais
     const med = this.medicamento();
     if (med) {
       this.preencherFormulario(med);
     }
   }
 
-  /**
-   * Incrementa a quantidade de forma rápida.
-   */
   async incrementarRapido(): Promise<void> {
     const med = this.medicamento();
     if (!med) return;
-
     const result = await this.store.incrementarRapido(med.id);
     if (!result.success && result.error) {
       this.notification.error(result.error.message);
     }
   }
 
-  /**
-   * Decrementa a quantidade de forma rápida.
-   */
   async decrementarRapido(): Promise<void> {
     const med = this.medicamento();
     if (!med) return;
-
     const result = await this.store.decrementarRapido(med.id);
     if (!result.success && result.error) {
       this.notification.error(result.error.message);
     }
   }
 
-  /**
-   * Confirma e executa a exclusão.
-   */
+  abrirModalExclusao(): void {
+    this.confirmModal.open();
+  }
+
   async confirmarExclusao(): Promise<void> {
     const med = this.medicamento();
     if (!med) return;
 
-    const confirmado = confirm(
-      `Tem certeza que deseja excluir "${med.nome}"?\n\nEsta ação não pode ser desfeita.`
-    );
+    this.excluindo.set(true);
+    const sucesso = await this.store.delete(med.id);
+    this.excluindo.set(false);
+    this.confirmModal.close();
 
-    if (confirmado) {
-      this.excluindo.set(true);
-      const sucesso = await this.store.delete(med.id);
-      this.excluindo.set(false);
-
-      if (sucesso) {
-        this.notification.success("Medicamento excluído com sucesso!");
-        this.router.navigate(["/medicamentos"]);
-      } else if (this.store.error()) {
-        this.notification.error(this.store.error()!.message);
-      }
+    if (sucesso) {
+      this.notification.success('Medicamento excluído com sucesso!');
+      this.router.navigate(['/medicamentos']);
+    } else if (this.store.error()) {
+      this.notification.error(this.store.error()!.message);
     }
   }
 
-  /**
-   * Verifica se um campo está inválido.
-   */
   isFieldInvalid(fieldName: string): boolean {
     const field = this.form.get(fieldName);
     return field ? field.invalid && (field.dirty || field.touched) : false;
   }
 
-  /**
-   * Obtém mensagem de erro de um campo.
-   */
   getFieldError(fieldName: string): string {
     const field = this.form.get(fieldName);
-    if (!field || !field.errors) return "";
-
-    if (field.errors["required"]) return "Campo obrigatório.";
-    if (field.errors["minlength"]) {
-      return `Mínimo de ${field.errors["minlength"].requiredLength} caracteres.`;
+    if (!field || !field.errors) return '';
+    if (field.errors['required']) return 'Campo obrigatório.';
+    if (field.errors['minlength']) {
+      return `Mínimo de ${field.errors['minlength'].requiredLength} caracteres.`;
     }
-    if (field.errors["min"]) {
-      return `Valor mínimo: ${field.errors["min"].min}.`;
+    if (field.errors['min']) {
+      return `Valor mínimo: ${field.errors['min'].min}.`;
     }
-
-    return "Campo inválido.";
+    return 'Campo inválido.';
   }
 
-  /**
-   * Formata o tipo de medicamento.
-   */
   formatarTipo(tipo: string): string {
     const formatMap: Record<string, string> = {
-      comprimido: "Comprimido",
-      capsula: "Cápsula",
-      liquido: "Líquido",
-      spray: "Spray",
-      creme: "Creme",
-      pomada: "Pomada",
-      gel: "Gel",
-      gotas: "Gotas",
-      injetavel: "Injetável",
-      outro: "Outro",
+      comprimido: 'Comprimido', capsula: 'Cápsula', liquido: 'Líquido',
+      spray: 'Spray', creme: 'Creme', pomada: 'Pomada', gel: 'Gel',
+      gotas: 'Gotas', injetavel: 'Injetável', outro: 'Outro',
     };
     return formatMap[tipo] || tipo;
   }
 
-  /**
-   * Formata data ISO para exibição.
-   */
   formatarData(dataISO: string): string {
     const data = new Date(dataISO);
-    return data.toLocaleDateString("pt-BR");
+    return data.toLocaleDateString('pt-BR');
   }
 
-  /**
-   * Submete o formulário de edição.
-   */
   async onSubmit(): Promise<void> {
     this.form.markAllAsTouched();
-
-    if (this.form.invalid || !this.medicamentoId) {
-      return;
-    }
+    if (this.form.invalid || !this.medicamentoId) return;
 
     const dto: UpdateMedicamentoDto = {
       nome: this.form.value.nome,
@@ -1086,14 +1093,12 @@ export class MedicamentosDetailPageComponent implements OnInit {
     const medicamento = await this.store.update(this.medicamentoId, dto);
 
     if (medicamento) {
-      this.notification.success("Medicamento atualizado com sucesso!", {
-        title: "Sucesso",
-      });
+      this.notification.success('Medicamento atualizado com sucesso!', { title: 'Sucesso' });
       this.isEditMode.set(false);
       this.router.navigate([], {
         relativeTo: this.route,
         queryParams: { editar: null },
-        queryParamsHandling: "merge",
+        queryParamsHandling: 'merge',
       });
     } else if (this.store.error()) {
       this.notification.error(this.store.error()!.message);

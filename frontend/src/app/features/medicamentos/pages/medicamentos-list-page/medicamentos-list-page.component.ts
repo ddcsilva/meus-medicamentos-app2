@@ -1,31 +1,26 @@
-import { CommonModule } from "@angular/common";
-import { Component, OnInit, inject } from "@angular/core";
-import { Router, RouterLink } from "@angular/router";
-import { NotificationService } from "../../../../core/services/notification.service";
-import { ButtonComponent } from "../../../../shared/ui/button/button.component";
-import { CardComponent } from "../../../../shared/ui/card/card.component";
-import { EmptyStateComponent } from "../../../../shared/ui/empty-state/empty-state.component";
-import { ErrorAlertComponent } from "../../../../shared/ui/error-alert/error-alert.component";
-import { LoadingComponent } from "../../../../shared/ui/loading/loading.component";
-import { PageLoadingComponent } from "../../../../shared/ui/page-loading/page-loading.component";
-import { StatusBadgeComponent } from "../../../../shared/ui/status-badge/status-badge.component";
-import { QuantidadeControlComponent } from "../../components/quantidade-control/quantidade-control.component";
-import { Medicamento, StatusValidade } from "../../models";
-import { MedicamentosStore } from "../../services/medicamentos.store";
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject, ViewChild } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { NotificationService } from '../../../../core/services/notification.service';
+import { ButtonComponent } from '../../../../shared/ui/button/button.component';
+import { CardComponent } from '../../../../shared/ui/card/card.component';
+import { EmptyStateComponent } from '../../../../shared/ui/empty-state/empty-state.component';
+import { ErrorAlertComponent } from '../../../../shared/ui/error-alert/error-alert.component';
+import { IconComponent } from '../../../../shared/ui/icon/icon.component';
+import { InputComponent } from '../../../../shared/ui/input/input.component';
+import { LoadingComponent } from '../../../../shared/ui/loading/loading.component';
+import { PageLoadingComponent } from '../../../../shared/ui/page-loading/page-loading.component';
+import { StatusBadgeComponent } from '../../../../shared/ui/status-badge/status-badge.component';
+import { ConfirmModalComponent, ConfirmModalConfig } from '../../../../shared/ui/confirm-modal/confirm-modal.component';
+import { QuantidadeControlComponent } from '../../components/quantidade-control/quantidade-control.component';
+import { Medicamento, StatusValidade } from '../../models';
+import { MedicamentosStore } from '../../services/medicamentos.store';
 
 /**
  * Página de listagem de medicamentos.
- *
- * Exibe cartões de medicamentos com:
- * - Nome, droga, tipo
- * - Status de validade (badge colorido)
- * - Quantidade atual
- * - Controles de incremento/decremento
- * - Filtros por status
- * - Busca por nome/droga
  */
 @Component({
-  selector: "app-medicamentos-list-page",
+  selector: 'app-medicamentos-list-page',
   standalone: true,
   imports: [
     CommonModule,
@@ -38,37 +33,47 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
     EmptyStateComponent,
     ErrorAlertComponent,
     QuantidadeControlComponent,
+    IconComponent,
+    InputComponent,
+    ConfirmModalComponent,
   ],
   template: `
     <div class="medicamentos-page">
       <!-- Header da página -->
       <div class="page-header">
         <div class="header-content">
-          <h1>Meus Medicamentos</h1>
+          <h1>
+            <app-icon name="pill" [size]="32" class="header-icon" />
+            Meus Medicamentos
+          </h1>
           <p class="subtitle">
             Gerencie o estoque de medicamentos da sua família
           </p>
         </div>
-        <app-button variant="primary" routerLink="/medicamentos/novo">
-          + Novo Medicamento
+        <app-button variant="primary" routerLink="/medicamentos/novo" icon="plus">
+          Novo Medicamento
         </app-button>
       </div>
 
       <!-- Estatísticas -->
       <div class="stats-bar">
         <div class="stat-item">
+          <app-icon name="package" [size]="20" class="stat-icon" />
           <span class="stat-value">{{ store.totalItems() }}</span>
           <span class="stat-label">Total</span>
         </div>
         <div class="stat-item stat-valido">
+          <app-icon name="check-circle" [size]="20" class="stat-icon" />
           <span class="stat-value">{{ store.validosCount() }}</span>
           <span class="stat-label">Válidos</span>
         </div>
         <div class="stat-item stat-prestes">
+          <app-icon name="alert-circle" [size]="20" class="stat-icon" />
           <span class="stat-value">{{ store.prestesCount() }}</span>
           <span class="stat-label">Prestes</span>
         </div>
         <div class="stat-item stat-vencido">
+          <app-icon name="x-circle" [size]="20" class="stat-icon" />
           <span class="stat-value">{{ store.vencidosCount() }}</span>
           <span class="stat-label">Vencidos</span>
         </div>
@@ -77,6 +82,7 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
       <!-- Barra de busca e filtros -->
       <div class="search-filter-bar">
         <div class="search-box">
+          <app-icon name="search" [size]="18" class="search-icon" />
           <input
             type="text"
             placeholder="Buscar por nome ou droga..."
@@ -87,38 +93,41 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
         </div>
 
         <div class="filters-bar">
-          <app-button
-            variant="ghost"
-            size="sm"
+          <button
+            type="button"
+            class="filter-chip"
             [class.active]="!store.filters().status"
             (click)="filtrarPorStatus(null)"
           >
             Todos
-          </app-button>
-          <app-button
-            variant="ghost"
-            size="sm"
+          </button>
+          <button
+            type="button"
+            class="filter-chip filter-valido"
             [class.active]="store.filters().status === 'valido'"
             (click)="filtrarPorStatus('valido')"
           >
+            <app-icon name="check" [size]="14" />
             Válidos
-          </app-button>
-          <app-button
-            variant="ghost"
-            size="sm"
+          </button>
+          <button
+            type="button"
+            class="filter-chip filter-prestes"
             [class.active]="store.filters().status === 'prestes'"
             (click)="filtrarPorStatus('prestes')"
           >
-            Prestes a vencer
-          </app-button>
-          <app-button
-            variant="ghost"
-            size="sm"
+            <app-icon name="clock" [size]="14" />
+            Prestes
+          </button>
+          <button
+            type="button"
+            class="filter-chip filter-vencido"
             [class.active]="store.filters().status === 'vencido'"
             (click)="filtrarPorStatus('vencido')"
           >
+            <app-icon name="x" [size]="14" />
             Vencidos
-          </app-button>
+          </button>
         </div>
       </div>
 
@@ -137,95 +146,117 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
       />
 
       <!-- Lista de medicamentos -->
-      <div *ngIf="!store.loading()" class="medicamentos-grid">
-        <app-card
-          *ngFor="let med of store.filteredItems()"
-          variant="elevated"
-          [clickable]="true"
-          class="medicamento-card"
-          (click)="verDetalhes(med)"
-        >
-          <div class="card-content">
-            <div class="card-header-row">
-              <h3 class="med-nome">{{ med.nome }}</h3>
-              <app-status-badge
-                [status]="med.statusValidade"
-              ></app-status-badge>
-            </div>
+      @if (!store.loading()) {
+        <div class="medicamentos-grid">
+          @for (med of store.filteredItems(); track med.id) {
+            <app-card
+              variant="elevated"
+              [clickable]="true"
+              class="medicamento-card"
+              (click)="verDetalhes(med)"
+            >
+              <div class="card-content">
+                <div class="card-header-row">
+                  <div class="med-title-group">
+                    <h3 class="med-nome">{{ med.nome }}</h3>
+                    <p class="med-droga">{{ med.droga }}</p>
+                  </div>
+                  <app-status-badge [status]="med.statusValidade" />
+                </div>
 
-            <p class="med-droga">{{ med.droga }}</p>
-            <p *ngIf="med.generico" class="med-generico">Genérico</p>
+                @if (med.generico) {
+                  <span class="med-generico-badge">
+                    <app-icon name="badge-check" [size]="12" />
+                    Genérico
+                  </span>
+                }
 
-            <div class="med-info">
-              <div class="info-item">
-                <span class="info-label">Tipo</span>
-                <span class="info-value">{{ med.tipo }}</span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Quantidade</span>
-                <span
-                  class="info-value"
-                  [class.low-stock]="med.quantidadeAtual < 5"
-                  [class.no-stock]="med.quantidadeAtual === 0"
-                >
-                  {{ med.quantidadeAtual }} / {{ med.quantidadeTotal }} un
-                </span>
-              </div>
-              <div class="info-item">
-                <span class="info-label">Validade</span>
-                <span class="info-value">{{ formatarData(med.validade) }}</span>
-              </div>
-            </div>
+                <div class="med-info">
+                  <div class="info-item">
+                    <app-icon name="box" [size]="16" class="info-icon" />
+                    <div>
+                      <span class="info-label">Tipo</span>
+                      <span class="info-value">{{ med.tipo }}</span>
+                    </div>
+                  </div>
+                  <div class="info-item">
+                    <app-icon name="hash" [size]="16" class="info-icon" />
+                    <div>
+                      <span class="info-label">Quantidade</span>
+                      <span
+                        class="info-value"
+                        [class.low-stock]="med.quantidadeAtual < 5"
+                        [class.no-stock]="med.quantidadeAtual === 0"
+                      >
+                        {{ med.quantidadeAtual }} / {{ med.quantidadeTotal }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="info-item">
+                    <app-icon name="calendar" [size]="16" class="info-icon" />
+                    <div>
+                      <span class="info-label">Validade</span>
+                      <span class="info-value">{{ formatarData(med.validade) }}</span>
+                    </div>
+                  </div>
+                </div>
 
-            <div class="card-actions" (click)="$event.stopPropagation()">
-              <app-button
-                variant="ghost"
-                size="sm"
-                (click)="editarMedicamento(med)"
-              >
-                Editar
-              </app-button>
-              <app-quantidade-control
-                [quantidade]="med.quantidadeAtual"
-                [quantidadeTotal]="med.quantidadeTotal"
-                [loading]="store.isItemLoading(med.id)"
-                [min]="0"
-                size="sm"
-                [showTotal]="true"
-                (incrementar)="incrementarRapido(med.id)"
-                (decrementar)="decrementarRapido(med.id)"
-              />
-            </div>
-          </div>
-        </app-card>
-      </div>
+                <div class="card-actions" (click)="$event.stopPropagation()">
+                  <app-button
+                    variant="ghost"
+                    size="sm"
+                    (clicked)="editarMedicamento(med)"
+                    icon="edit-2"
+                  >
+                    Editar
+                  </app-button>
+                  <app-quantidade-control
+                    [quantidade]="med.quantidadeAtual"
+                    [quantidadeTotal]="med.quantidadeTotal"
+                    [loading]="store.isItemLoading(med.id)"
+                    [min]="0"
+                    size="sm"
+                    [showTotal]="false"
+                    (incrementar)="incrementarRapido(med.id)"
+                    (decrementar)="decrementarRapido(med.id)"
+                  />
+                </div>
+              </div>
+            </app-card>
+          }
+        </div>
+      }
 
       <!-- Estado vazio - Busca sem resultados -->
-      <app-empty-state
-        *ngIf="!store.loading() && store.filteredItems().length === 0 && store.hasActiveFilters()"
-        variant="search"
-        icon="🔍"
-        title="Nenhum medicamento encontrado"
-        description="Tente alterar os termos de busca ou remover alguns filtros."
-        actionLabel="Limpar Filtros"
-        (action)="limparFiltros()"
-      />
+      @if (!store.loading() && store.filteredItems().length === 0 && store.hasActiveFilters()) {
+        <app-empty-state
+          variant="search"
+          iconName="search-x"
+          title="Nenhum medicamento encontrado"
+          description="Tente alterar os termos de busca ou remover alguns filtros."
+          actionLabel="Limpar Filtros"
+          actionIcon="x"
+          (action)="limparFiltros()"
+        />
+      }
 
       <!-- Estado vazio - Sem medicamentos -->
-      <app-empty-state
-        *ngIf="!store.loading() && store.items().length === 0 && !store.hasActiveFilters()"
-        icon="💊"
-        title="Nenhum medicamento cadastrado"
-        description="Comece adicionando seu primeiro medicamento ao estoque familiar."
-        actionLabel="+ Adicionar Medicamento"
-        (action)="navegarParaNovo()"
-      />
+      @if (!store.loading() && store.items().length === 0 && !store.hasActiveFilters()) {
+        <app-empty-state
+          iconName="pill"
+          title="Nenhum medicamento cadastrado"
+          description="Comece adicionando seu primeiro medicamento ao estoque familiar."
+          actionLabel="Adicionar Medicamento"
+          actionIcon="plus"
+          (action)="navegarParaNovo()"
+        />
+      }
     </div>
   `,
   styles: [
     `
       .medicamentos-page {
-        padding: var(--spacing-lg) 0;
+        padding: var(--spacing-md) 0;
       }
 
       /* Header */
@@ -233,14 +264,22 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: var(--spacing-lg);
+        margin-bottom: var(--spacing-xl);
         flex-wrap: wrap;
         gap: var(--spacing-md);
       }
 
       .header-content h1 {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
         color: var(--color-text-primary);
         margin-bottom: var(--spacing-xs);
+        font-size: var(--font-size-2xl);
+      }
+
+      .header-icon {
+        color: var(--color-primary);
       }
 
       .subtitle {
@@ -250,43 +289,54 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
 
       /* Estatísticas */
       .stats-bar {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
         gap: var(--spacing-md);
-        margin-bottom: var(--spacing-lg);
-        flex-wrap: wrap;
+        margin-bottom: var(--spacing-xl);
       }
 
       .stat-item {
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: var(--spacing-md) var(--spacing-lg);
+        gap: var(--spacing-xs);
+        padding: var(--spacing-lg);
         background: var(--color-surface);
-        border-radius: var(--border-radius-md);
-        border: 1px solid var(--color-border);
-        min-width: 80px;
+        border-radius: var(--border-radius-xl);
+        border: 1px solid var(--color-border-light);
+        transition: all var(--transition-fast);
+
+        &:hover {
+          box-shadow: var(--shadow-md);
+        }
+      }
+
+      .stat-icon {
+        color: var(--color-text-hint);
       }
 
       .stat-value {
-        font-size: var(--font-size-xl);
+        font-size: var(--font-size-2xl);
         font-weight: var(--font-weight-bold);
         color: var(--color-text-primary);
+        font-variant-numeric: tabular-nums;
       }
 
       .stat-label {
         font-size: var(--font-size-xs);
         color: var(--color-text-secondary);
         text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
 
-      .stat-valido .stat-value {
-        color: var(--color-valido);
+      .stat-valido {
+        .stat-icon, .stat-value { color: var(--color-success); }
       }
-      .stat-prestes .stat-value {
-        color: var(--color-prestes);
+      .stat-prestes {
+        .stat-icon, .stat-value { color: var(--color-warning); }
       }
-      .stat-vencido .stat-value {
-        color: var(--color-vencido);
+      .stat-vencido {
+        .stat-icon, .stat-value { color: var(--color-danger); }
       }
 
       /* Busca e Filtros */
@@ -294,25 +344,33 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
         display: flex;
         flex-direction: column;
         gap: var(--spacing-md);
-        margin-bottom: var(--spacing-lg);
-        padding-bottom: var(--spacing-md);
-        border-bottom: 1px solid var(--color-border);
+        margin-bottom: var(--spacing-xl);
       }
 
       .search-box {
+        position: relative;
         width: 100%;
         max-width: 400px;
       }
 
+      .search-icon {
+        position: absolute;
+        left: var(--spacing-md);
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--color-text-hint);
+        pointer-events: none;
+      }
+
       .search-input {
         width: 100%;
-        padding: var(--spacing-sm) var(--spacing-md);
+        padding: 12px var(--spacing-md) 12px calc(var(--spacing-md) + 28px);
         font-family: inherit;
         font-size: var(--font-size-base);
         color: var(--color-text-primary);
         background-color: var(--color-surface);
-        border: 1px solid var(--color-border);
-        border-radius: var(--border-radius-md);
+        border: 2px solid var(--color-border);
+        border-radius: var(--border-radius-lg);
         transition: all var(--transition-fast);
 
         &::placeholder {
@@ -322,7 +380,7 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
         &:focus {
           outline: none;
           border-color: var(--color-primary);
-          box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+          box-shadow: 0 0 0 4px var(--color-primary-subtle);
         }
       }
 
@@ -332,50 +390,61 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
         flex-wrap: wrap;
       }
 
-      .filters-bar app-button.active ::ng-deep button {
-        background-color: var(--color-primary);
-        color: white;
-      }
-
-      /* Erro */
-      .error-alert {
-        display: flex;
+      .filter-chip {
+        display: inline-flex;
         align-items: center;
-        gap: var(--spacing-sm);
-        padding: var(--spacing-md);
-        background-color: var(--color-danger-bg);
-        border: 1px solid var(--color-danger-light);
-        border-radius: var(--border-radius-md);
-        margin-bottom: var(--spacing-lg);
-        color: var(--color-vencido-text);
+        gap: 6px;
+        padding: 8px 16px;
         font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
+        color: var(--color-text-secondary);
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius-full);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+
+        &:hover {
+          background: var(--color-surface-variant);
+        }
+
+        &.active {
+          background: var(--color-primary);
+          color: white;
+          border-color: var(--color-primary);
+        }
       }
 
-      .error-icon {
-        font-size: var(--font-size-lg);
+      .filter-valido.active {
+        background: var(--color-success);
+        border-color: var(--color-success);
       }
 
-      /* Loading */
-      .loading-container {
-        display: flex;
-        justify-content: center;
-        padding: var(--spacing-3xl) 0;
+      .filter-prestes.active {
+        background: var(--color-warning);
+        border-color: var(--color-warning);
+      }
+
+      .filter-vencido.active {
+        background: var(--color-danger);
+        border-color: var(--color-danger);
       }
 
       /* Grid de medicamentos */
       .medicamentos-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
         gap: var(--spacing-lg);
       }
 
       .medicamento-card {
-        transition: transform var(--transition-fast);
+        transition: all var(--transition-fast);
         cursor: pointer;
-      }
 
-      .medicamento-card:hover {
-        transform: translateY(-2px);
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: var(--shadow-lg);
+        }
       }
 
       .card-content {
@@ -391,11 +460,17 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
         gap: var(--spacing-sm);
       }
 
+      .med-title-group {
+        flex: 1;
+        min-width: 0;
+      }
+
       .med-nome {
         font-size: var(--font-size-lg);
         font-weight: var(--font-weight-semibold);
         color: var(--color-text-primary);
         margin: 0;
+        line-height: 1.3;
       }
 
       .med-droga {
@@ -404,26 +479,42 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
         margin: 0;
       }
 
-      .med-generico {
+      .med-generico-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        width: fit-content;
+        padding: 4px 10px;
         font-size: var(--font-size-xs);
-        color: var(--color-primary);
-        margin: 0;
         font-weight: var(--font-weight-medium);
+        color: var(--color-primary);
+        background: var(--color-primary-subtle);
+        border-radius: var(--border-radius-full);
       }
 
       .med-info {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        display: flex;
+        flex-direction: column;
         gap: var(--spacing-sm);
         padding: var(--spacing-md);
-        background-color: var(--color-background);
-        border-radius: var(--border-radius-md);
+        background-color: var(--color-surface-variant);
+        border-radius: var(--border-radius-lg);
       }
 
       .info-item {
         display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+      }
+
+      .info-icon {
+        color: var(--color-text-hint);
+        flex-shrink: 0;
+      }
+
+      .info-item > div {
+        display: flex;
         flex-direction: column;
-        gap: 2px;
       }
 
       .info-label {
@@ -440,85 +531,55 @@ import { MedicamentosStore } from "../../services/medicamentos.store";
       }
 
       .info-value.low-stock {
-        color: var(--color-prestes);
+        color: var(--color-warning);
       }
 
       .info-value.no-stock {
         color: var(--color-danger);
+        font-weight: var(--font-weight-bold);
       }
 
       .card-actions {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding-top: var(--spacing-sm);
+        padding-top: var(--spacing-md);
         border-top: 1px solid var(--color-border-light);
       }
 
-      .quantity-controls {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-sm);
-      }
-
-      .quantity-display {
-        min-width: 32px;
-        text-align: center;
-        font-weight: var(--font-weight-semibold);
-      }
-
-      /* Estado vazio */
-      .empty-state {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: var(--spacing-3xl);
-        text-align: center;
-      }
-
-      .empty-icon {
-        font-size: 4rem;
-        margin-bottom: var(--spacing-lg);
-      }
-
-      .empty-state h3 {
-        color: var(--color-text-primary);
-        margin-bottom: var(--spacing-sm);
-      }
-
-      .empty-state p {
-        color: var(--color-text-secondary);
-        margin-bottom: var(--spacing-lg);
-      }
-
       /* Responsividade */
-      @media (max-width: 639px) {
+      @media (max-width: 767px) {
         .page-header {
           flex-direction: column;
           align-items: stretch;
         }
 
-        .page-header app-button {
-          width: 100%;
-        }
-
         .stats-bar {
-          justify-content: space-between;
+          grid-template-columns: repeat(2, 1fr);
         }
 
         .stat-item {
-          flex: 1;
-          min-width: 70px;
-          padding: var(--spacing-sm) var(--spacing-md);
+          padding: var(--spacing-md);
+        }
+
+        .stat-value {
+          font-size: var(--font-size-xl);
         }
 
         .medicamentos-grid {
           grid-template-columns: 1fr;
         }
+      }
 
-        .med-info {
-          grid-template-columns: 1fr;
+      @media (max-width: 479px) {
+        .stats-bar {
+          grid-template-columns: repeat(2, 1fr);
+          gap: var(--spacing-sm);
+        }
+
+        .filter-chip {
+          padding: 6px 12px;
+          font-size: var(--font-size-xs);
         }
       }
     `,
@@ -533,38 +594,23 @@ export class MedicamentosListPageComponent implements OnInit {
     this.store.loadAll();
   }
 
-  /**
-   * Navega para a página de novo medicamento.
-   */
   navegarParaNovo(): void {
-    this.router.navigate(["/medicamentos/novo"]);
+    this.router.navigate(['/medicamentos/novo']);
   }
 
-  /**
-   * Filtra medicamentos por status de validade.
-   */
   filtrarPorStatus(status: StatusValidade | null): void {
     this.store.setStatusFilter(status);
   }
 
-  /**
-   * Atualiza a busca textual.
-   */
   onBusca(event: Event): void {
     const busca = (event.target as HTMLInputElement).value;
     this.store.setBusca(busca);
   }
 
-  /**
-   * Limpa todos os filtros.
-   */
   limparFiltros(): void {
     this.store.clearFilters();
   }
 
-  /**
-   * Incrementa a quantidade de um medicamento de forma rápida.
-   */
   async incrementarRapido(id: string): Promise<void> {
     const result = await this.store.incrementarRapido(id);
     if (!result.success && result.error) {
@@ -572,9 +618,6 @@ export class MedicamentosListPageComponent implements OnInit {
     }
   }
 
-  /**
-   * Decrementa a quantidade de um medicamento de forma rápida.
-   */
   async decrementarRapido(id: string): Promise<void> {
     const result = await this.store.decrementarRapido(id);
     if (!result.success && result.error) {
@@ -582,27 +625,18 @@ export class MedicamentosListPageComponent implements OnInit {
     }
   }
 
-  /**
-   * Navega para a página de detalhes.
-   */
   verDetalhes(med: Medicamento): void {
-    this.router.navigate(["/medicamentos", med.id]);
+    this.router.navigate(['/medicamentos', med.id]);
   }
 
-  /**
-   * Navega para a página de edição.
-   */
   editarMedicamento(med: Medicamento): void {
-    this.router.navigate(["/medicamentos", med.id], {
+    this.router.navigate(['/medicamentos', med.id], {
       queryParams: { editar: true },
     });
   }
 
-  /**
-   * Formata data ISO para exibição.
-   */
   formatarData(dataISO: string): string {
     const data = new Date(dataISO);
-    return data.toLocaleDateString("pt-BR");
+    return data.toLocaleDateString('pt-BR');
   }
 }
