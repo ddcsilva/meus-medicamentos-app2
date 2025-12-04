@@ -17,11 +17,11 @@ export interface MedicamentoFirestoreDoc {
   /** Indica se é medicamento genérico */
   generico: boolean;
 
-  /** Nome da marca */
-  marca: string;
+  /** Nome da marca (opcional) */
+  marca?: string;
 
-  /** Nome do laboratório */
-  laboratorio: string;
+  /** Dosagem/concentração do medicamento (ex: 500mg) - opcional */
+  dosagem?: string;
 
   /** Tipo de medicamento */
   tipo: TipoMedicamento;
@@ -64,11 +64,12 @@ export type MedicamentoFirestoreCreate = Omit<MedicamentoFirestoreDoc, never>;
  * Todos os campos são opcionais, exceto atualizadoEm que é sempre atualizado.
  */
 export interface MedicamentoFirestoreUpdate {
+  [key: string]: unknown;
   nome?: string;
   droga?: string;
   generico?: boolean;
   marca?: string;
-  laboratorio?: string;
+  dosagem?: string;
   tipo?: TipoMedicamento;
   validade?: firestore.Timestamp;
   quantidadeTotal?: number;
@@ -96,7 +97,6 @@ export const FIRESTORE_INDEXED_FIELDS = {
   QUANTIDADE_ATUAL: "quantidadeAtual",
   CRIADO_EM: "criadoEm",
   TIPO: "tipo",
-  LABORATORIO: "laboratorio",
   GENERICO: "generico",
 } as const;
 
@@ -148,5 +148,3 @@ export function calcularStatusValidade(
 
   return "valido";
 }
-
-

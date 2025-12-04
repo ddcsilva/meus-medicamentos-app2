@@ -18,7 +18,7 @@ import {
 /**
  * Filtra medicamentos por busca textual.
  *
- * Busca em: nome, droga, marca, laboratório.
+ * Busca em: nome, droga, marca (se existir).
  *
  * @param medicamentos - Lista de medicamentos
  * @param busca - Texto de busca
@@ -38,8 +38,7 @@ export function filtrarPorBusca(
     (med) =>
       med.nome.toLowerCase().includes(termoBusca) ||
       med.droga.toLowerCase().includes(termoBusca) ||
-      med.marca.toLowerCase().includes(termoBusca) ||
-      med.laboratorio.toLowerCase().includes(termoBusca)
+      (med.marca && med.marca.toLowerCase().includes(termoBusca))
   );
 }
 
@@ -98,24 +97,24 @@ export function filtrarPorGenerico(
 }
 
 /**
- * Filtra medicamentos por laboratório.
+ * Filtra medicamentos por marca.
  *
  * @param medicamentos - Lista de medicamentos
- * @param laboratorio - Nome do laboratório
+ * @param marca - Nome da marca
  * @returns Lista filtrada
  */
-export function filtrarPorLaboratorio(
+export function filtrarPorMarca(
   medicamentos: Medicamento[],
-  laboratorio: string | null | undefined
+  marca: string | null | undefined
 ): Medicamento[] {
-  if (!laboratorio) {
+  if (!marca) {
     return medicamentos;
   }
 
-  const labBusca = laboratorio.toLowerCase().trim();
+  const marcaBusca = marca.toLowerCase().trim();
 
-  return medicamentos.filter((med) =>
-    med.laboratorio.toLowerCase().includes(labBusca)
+  return medicamentos.filter(
+    (med) => med.marca && med.marca.toLowerCase().includes(marcaBusca)
   );
 }
 
@@ -253,11 +252,6 @@ export function aplicarFiltros(
     resultado = filtrarPorGenerico(resultado, filtros.generico);
   }
 
-  // Aplicar filtro de laboratório
-  if (filtros.laboratorio) {
-    resultado = filtrarPorLaboratorio(resultado, filtros.laboratorio);
-  }
-
   // Aplicar filtro de quantidade baixa
   if (filtros.quantidadeBaixa) {
     resultado = filtrarPorQuantidadeBaixa(
@@ -283,16 +277,20 @@ export function aplicarFiltros(
 // ========================================
 
 /**
- * Extrai lista única de laboratórios dos medicamentos.
+ * Extrai lista única de marcas dos medicamentos.
  *
  * Útil para popular dropdowns de filtro.
  *
  * @param medicamentos - Lista de medicamentos
- * @returns Lista de laboratórios únicos ordenados
+ * @returns Lista de marcas únicas ordenadas
  */
-export function extrairLaboratorios(medicamentos: Medicamento[]): string[] {
-  const laboratorios = new Set(medicamentos.map((med) => med.laboratorio));
-  return Array.from(laboratorios).sort();
+export function extrairMarcas(medicamentos: Medicamento[]): string[] {
+  const marcas = new Set(
+    medicamentos
+      .filter((med) => med.marca)
+      .map((med) => med.marca as string)
+  );
+  return Array.from(marcas).sort();
 }
 
 /**
@@ -337,8 +335,7 @@ export function temFiltrosAtivos(filtros: MedicamentosFiltros): boolean {
     filtros.busca ||
     filtros.status ||
     filtros.tipo ||
-    filtros.generico !== null && filtros.generico !== undefined ||
-    filtros.laboratorio ||
+    (filtros.generico !== null && filtros.generico !== undefined) ||
     filtros.quantidadeBaixa ||
     filtros.ordenarPor
   );
@@ -361,7 +358,6 @@ export function limparFiltrosVazios(
   if (filtros.generico !== null && filtros.generico !== undefined) {
     resultado.generico = filtros.generico;
   }
-  if (filtros.laboratorio) resultado.laboratorio = filtros.laboratorio;
   if (filtros.quantidadeBaixa) resultado.quantidadeBaixa = true;
   if (filtros.limiteQuantidadeBaixa) {
     resultado.limiteQuantidadeBaixa = filtros.limiteQuantidadeBaixa;
@@ -371,4 +367,3 @@ export function limparFiltrosVazios(
 
   return resultado;
 }
-

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -12,6 +12,7 @@ import { ButtonComponent } from '../../../../shared/ui/button/button.component';
 import { CardComponent } from '../../../../shared/ui/card/card.component';
 import { IconComponent } from '../../../../shared/ui/icon/icon.component';
 import { LoadingComponent } from '../../../../shared/ui/loading/loading.component';
+import { ImageUploadComponent } from '../../../../shared/ui/image-upload/image-upload.component';
 import { MedicamentosStore } from '../../services/medicamentos.store';
 import { CreateMedicamentoDto, TipoMedicamento } from '../../models';
 
@@ -29,6 +30,7 @@ import { CreateMedicamentoDto, TipoMedicamento } from '../../models';
     CardComponent,
     LoadingComponent,
     IconComponent,
+    ImageUploadComponent,
   ],
   template: `
     <div class="medicamentos-new-page">
@@ -122,50 +124,6 @@ import { CreateMedicamentoDto, TipoMedicamento } from '../../models';
             </div>
           </div>
 
-          <!-- Seção: Fabricante -->
-          <div class="form-section">
-            <h3 class="section-title">
-              <app-icon name="package" [size]="18" />
-              Fabricante
-            </h3>
-
-            <div class="form-row two-cols">
-              <div class="form-field">
-                <label for="marca" class="form-label">
-                  Marca <span class="required">*</span>
-                </label>
-                <input
-                  id="marca"
-                  type="text"
-                  formControlName="marca"
-                  class="form-input"
-                  [class.has-error]="isFieldInvalid('marca')"
-                  placeholder="Ex: Medley"
-                />
-                @if (isFieldInvalid('marca')) {
-                  <span class="field-error">{{ getFieldError('marca') }}</span>
-                }
-              </div>
-
-              <div class="form-field">
-                <label for="laboratorio" class="form-label">
-                  Laboratório <span class="required">*</span>
-                </label>
-                <input
-                  id="laboratorio"
-                  type="text"
-                  formControlName="laboratorio"
-                  class="form-input"
-                  [class.has-error]="isFieldInvalid('laboratorio')"
-                  placeholder="Ex: Sanofi"
-                />
-                @if (isFieldInvalid('laboratorio')) {
-                  <span class="field-error">{{ getFieldError('laboratorio') }}</span>
-                }
-              </div>
-            </div>
-          </div>
-
           <!-- Seção: Detalhes -->
           <div class="form-section">
             <h3 class="section-title">
@@ -195,6 +153,24 @@ import { CreateMedicamentoDto, TipoMedicamento } from '../../models';
               </div>
 
               <div class="form-field">
+                <label for="dosagem" class="form-label">
+                  Dosagem (opcional)
+                </label>
+                <input
+                  id="dosagem"
+                  type="text"
+                  formControlName="dosagem"
+                  class="form-input"
+                  placeholder="Ex: 500mg"
+                />
+                <span class="field-hint">
+                  Concentração ou dose do medicamento
+                </span>
+              </div>
+            </div>
+
+            <div class="form-row two-cols">
+              <div class="form-field">
                 <label for="validade" class="form-label">
                   Data de Validade <span class="required">*</span>
                 </label>
@@ -208,6 +184,33 @@ import { CreateMedicamentoDto, TipoMedicamento } from '../../models';
                 @if (isFieldInvalid('validade')) {
                   <span class="field-error">{{ getFieldError('validade') }}</span>
                 }
+              </div>
+
+              <div class="form-field">
+                <label for="marca" class="form-label">
+                  Marca (opcional)
+                </label>
+                <input
+                  id="marca"
+                  type="text"
+                  formControlName="marca"
+                  class="form-input"
+                  placeholder="Ex: Medley"
+                />
+                <span class="field-hint">
+                  Nome da marca do fabricante
+                </span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <app-image-upload
+                  label="Foto do Medicamento (opcional)"
+                  hint="Tire uma foto da caixa para facilitar a identificação"
+                  (fileSelected)="onImageSelected($event)"
+                  (fileRemoved)="onImageRemoved()"
+                />
               </div>
             </div>
           </div>
@@ -548,6 +551,9 @@ export class MedicamentosNewPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly notification = inject(NotificationService);
 
+  /** Arquivo de imagem selecionado */
+  readonly selectedImage = signal<File | null>(null);
+
   readonly tiposMedicamento: TipoMedicamento[] = [
     'comprimido', 'capsula', 'liquido', 'spray', 'creme',
     'pomada', 'gel', 'gotas', 'injetavel', 'outro',
@@ -557,14 +563,28 @@ export class MedicamentosNewPageComponent {
     nome: ['', [Validators.required, Validators.minLength(3)]],
     droga: ['', [Validators.required, Validators.minLength(3)]],
     generico: [false],
-    marca: ['', [Validators.required]],
-    laboratorio: ['', [Validators.required]],
+    marca: [''],
+    dosagem: [''],
     tipo: ['', [Validators.required]],
     validade: ['', [Validators.required]],
     quantidadeTotal: [null, [Validators.required, Validators.min(1)]],
     quantidadeAtual: [null, [Validators.required, Validators.min(0)]],
     observacoes: [''],
   });
+
+  /**
+   * Handler para seleção de imagem.
+   */
+  onImageSelected(file: File): void {
+    this.selectedImage.set(file);
+  }
+
+  /**
+   * Handler para remoção de imagem.
+   */
+  onImageRemoved(): void {
+    this.selectedImage.set(null);
+  }
 
   isFieldInvalid(fieldName: string): boolean {
     const field = this.form.get(fieldName);
@@ -601,8 +621,8 @@ export class MedicamentosNewPageComponent {
       nome: this.form.value.nome,
       droga: this.form.value.droga,
       generico: this.form.value.generico || false,
-      marca: this.form.value.marca,
-      laboratorio: this.form.value.laboratorio,
+      marca: this.form.value.marca || undefined,
+      dosagem: this.form.value.dosagem || undefined,
       tipo: this.form.value.tipo,
       validade: this.form.value.validade,
       quantidadeTotal: this.form.value.quantidadeTotal,
@@ -610,9 +630,15 @@ export class MedicamentosNewPageComponent {
       observacoes: this.form.value.observacoes || undefined,
     };
 
+    // Criar medicamento
     const medicamento = await this.store.create(dto);
 
     if (medicamento) {
+      // Se houver imagem selecionada, fazer upload
+      if (this.selectedImage()) {
+        await this.store.uploadFoto(medicamento.id, this.selectedImage()!);
+      }
+
       this.notification.success('Medicamento cadastrado com sucesso!', { title: 'Sucesso' });
       this.router.navigate(['/medicamentos']);
     } else if (this.store.error()) {

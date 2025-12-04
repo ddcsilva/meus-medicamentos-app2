@@ -58,11 +58,11 @@ export interface Medicamento {
   /** Indica se é medicamento genérico */
   generico: boolean;
 
-  /** Nome da marca */
-  marca: string;
+  /** Nome da marca (opcional) */
+  marca?: string;
 
-  /** Nome do laboratório */
-  laboratorio: string;
+  /** Dosagem/concentração do medicamento (ex: 500mg, 10ml) - opcional */
+  dosagem?: string;
 
   /** Tipo de medicamento (comprimido, cápsula, etc.) */
   tipo: TipoMedicamento;
@@ -99,5 +99,3 @@ export interface Medicamento {
  * Tipo parcial do medicamento (para atualizações parciais).
  */
 export type MedicamentoPartial = Partial<Omit<Medicamento, "id">>;
-
-

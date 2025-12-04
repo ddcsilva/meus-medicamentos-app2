@@ -39,7 +39,7 @@ export class StatusBadgeComponent {
   
   private readonly statusConfig: Record<StatusValidade, { variant: 'success' | 'warning' | 'danger'; label: string }> = {
     valido: { variant: 'success', label: 'Válido' },
-    prestes: { variant: 'warning', label: 'Prestes a vencer' },
+    prestes: { variant: 'warning', label: 'Vencendo' },
     vencido: { variant: 'danger', label: 'Vencido' }
   };
   

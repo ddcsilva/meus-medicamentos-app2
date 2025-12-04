@@ -13,7 +13,8 @@ import {
   Sun, Moon, Home, PlusCircle, Plus, Minus, ChevronDown, Menu,
   Search, SearchX, Package, Box, Hash, Calendar, Edit2, Trash2,
   ArrowLeft, RefreshCw, LoaderCircle, Inbox, FileText, WifiOff,
-  Check, Clock, BadgeCheck, Settings, User, Loader2
+  Check, Clock, BadgeCheck, Settings, User, Loader2,
+  Camera, Image, Upload, ImagePlus
 } from 'lucide-angular';
 import {
   firebaseConfig,
@@ -32,7 +33,8 @@ const lucideIcons = {
   Sun, Moon, Home, PlusCircle, Plus, Minus, ChevronDown, Menu,
   Search, SearchX, Package, Box, Hash, Calendar, Edit2, Trash2,
   ArrowLeft, RefreshCw, LoaderCircle, Inbox, FileText, WifiOff,
-  Check, Clock, BadgeCheck, Settings, User, Loader2
+  Check, Clock, BadgeCheck, Settings, User, Loader2,
+  Camera, Image, Upload, ImagePlus
 };
 
 /**

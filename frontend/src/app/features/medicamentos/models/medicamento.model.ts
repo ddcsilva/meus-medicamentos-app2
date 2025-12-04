@@ -37,11 +37,11 @@ export interface Medicamento {
   /** Indica se é medicamento genérico */
   generico: boolean;
 
-  /** Nome da marca */
-  marca: string;
+  /** Nome da marca (opcional) */
+  marca?: string;
 
-  /** Nome do laboratório */
-  laboratorio: string;
+  /** Dosagem/concentração do medicamento (ex: 500mg, 10ml) - opcional */
+  dosagem?: string;
 
   /** Tipo de medicamento (comprimido, cápsula, etc.) */
   tipo: TipoMedicamento | string;
@@ -84,8 +84,8 @@ export interface CreateMedicamentoDto {
   nome: string;
   droga: string;
   generico: boolean;
-  marca: string;
-  laboratorio: string;
+  marca?: string;
+  dosagem?: string;
   tipo: TipoMedicamento | string;
   validade: string; // ISO 8601 (YYYY-MM-DD)
   quantidadeTotal: number;
@@ -104,7 +104,7 @@ export interface UpdateMedicamentoDto {
   droga?: string;
   generico?: boolean;
   marca?: string;
-  laboratorio?: string;
+  dosagem?: string;
   tipo?: TipoMedicamento | string;
   validade?: string; // ISO 8601 (YYYY-MM-DD)
   quantidadeTotal?: number;
@@ -133,8 +133,8 @@ export interface MedicamentoResponseDto {
   nome: string;
   droga: string;
   generico: boolean;
-  marca: string;
-  laboratorio: string;
+  marca?: string;
+  dosagem?: string;
   tipo: TipoMedicamento | string;
   validade: string;
   statusValidade: StatusValidade;
@@ -162,7 +162,7 @@ export function mapResponseToMedicamento(
     droga: dto.droga,
     generico: dto.generico,
     marca: dto.marca,
-    laboratorio: dto.laboratorio,
+    dosagem: dto.dosagem,
     tipo: dto.tipo,
     validade: dto.validade,
     statusValidade: dto.statusValidade,
@@ -191,8 +191,8 @@ export function mapMedicamentoToCreateDto(
     nome: medicamento.nome!,
     droga: medicamento.droga!,
     generico: medicamento.generico ?? false,
-    marca: medicamento.marca!,
-    laboratorio: medicamento.laboratorio!,
+    marca: medicamento.marca,
+    dosagem: medicamento.dosagem,
     tipo: medicamento.tipo!,
     validade: medicamento.validade!,
     quantidadeTotal: medicamento.quantidadeTotal!,
@@ -218,7 +218,7 @@ export function mapMedicamentoToUpdateDto(
     droga: medicamento.droga,
     generico: medicamento.generico,
     marca: medicamento.marca,
-    laboratorio: medicamento.laboratorio,
+    dosagem: medicamento.dosagem,
     tipo: medicamento.tipo,
     validade: medicamento.validade,
     quantidadeTotal: medicamento.quantidadeTotal,

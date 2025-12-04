@@ -17,11 +17,11 @@ export interface CreateMedicamentoDto {
   /** Indica se é medicamento genérico */
   generico: boolean;
 
-  /** Nome da marca */
-  marca: string;
+  /** Nome da marca (opcional) */
+  marca?: string;
 
-  /** Nome do laboratório */
-  laboratorio: string;
+  /** Dosagem/concentração do medicamento (ex: 500mg) - opcional */
+  dosagem?: string;
 
   /** Tipo de medicamento */
   tipo: TipoMedicamento;
@@ -60,8 +60,8 @@ export interface UpdateMedicamentoDto {
   /** Nome da marca */
   marca?: string;
 
-  /** Nome do laboratório */
-  laboratorio?: string;
+  /** Dosagem/concentração do medicamento (ex: 500mg) */
+  dosagem?: string;
 
   /** Tipo de medicamento */
   tipo?: TipoMedicamento;
@@ -111,11 +111,11 @@ export interface MedicamentoResponseDto {
   /** Indica se é medicamento genérico */
   generico: boolean;
 
-  /** Nome da marca */
-  marca: string;
+  /** Nome da marca (opcional) */
+  marca?: string;
 
-  /** Nome do laboratório */
-  laboratorio: string;
+  /** Dosagem/concentração do medicamento (ex: 500mg) - opcional */
+  dosagem?: string;
 
   /** Tipo de medicamento */
   tipo: TipoMedicamento;
@@ -181,9 +181,6 @@ export interface MedicamentosFiltrosDto {
   /** Filtro por genérico */
   generico?: boolean;
 
-  /** Filtro por laboratório */
-  laboratorio?: string;
-
   /** Ordenar por campo */
   ordenarPor?: "nome" | "validade" | "quantidadeAtual" | "criadoEm";
 
@@ -196,5 +193,3 @@ export interface MedicamentosFiltrosDto {
   /** Itens por página */
   pageSize?: number;
 }
-
-

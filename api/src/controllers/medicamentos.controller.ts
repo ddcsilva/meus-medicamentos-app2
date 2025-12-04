@@ -26,7 +26,6 @@ export class MedicamentosController {
    * - status: StatusValidade - filtro por status
    * - tipo: TipoMedicamento - filtro por tipo
    * - generico: boolean - filtro por genérico
-   * - laboratorio: string - filtro por laboratório
    * - ordenarPor: string - campo de ordenação
    * - ordem: 'asc' | 'desc' - direção da ordenação
    * - page: number - página atual
@@ -322,11 +321,6 @@ export class MedicamentosController {
       filtros.generico = true;
     } else if (query.generico === "false") {
       filtros.generico = false;
-    }
-
-    // Laboratório
-    if (typeof query.laboratorio === "string" && query.laboratorio.trim()) {
-      filtros.laboratorio = query.laboratorio.trim();
     }
 
     // Ordenação

@@ -30,3 +30,6 @@ export * from './confirm-modal/confirm-modal.component';
 
 // Theme
 export * from './theme-toggle/theme-toggle.component';
+
+// Image Upload
+export * from './image-upload/image-upload.component';

@@ -14,6 +14,7 @@ import { IconComponent } from '../../../../shared/ui/icon/icon.component';
 import { LoadingComponent } from '../../../../shared/ui/loading/loading.component';
 import { StatusBadgeComponent } from '../../../../shared/ui/status-badge/status-badge.component';
 import { ConfirmModalComponent, ConfirmModalConfig } from '../../../../shared/ui/confirm-modal/confirm-modal.component';
+import { ImageUploadComponent } from '../../../../shared/ui/image-upload/image-upload.component';
 import { QuantidadeControlComponent } from '../../components/quantidade-control/quantidade-control.component';
 import {
   Medicamento,
@@ -39,6 +40,7 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
     QuantidadeControlComponent,
     IconComponent,
     ConfirmModalComponent,
+    ImageUploadComponent,
   ],
   template: `
     <div class="medicamentos-detail-page">
@@ -87,6 +89,13 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
           @if (!isEditMode()) {
             <app-card variant="elevated">
               <div class="detail-content">
+                <!-- Imagem do medicamento (se existir) -->
+                @if (medicamento()!.fotoUrl) {
+                  <div class="med-image-container">
+                    <img [src]="medicamento()!.fotoUrl" [alt]="medicamento()!.nome" class="med-image" />
+                  </div>
+                }
+
                 <!-- Header do medicamento -->
                 <div class="detail-header">
                   <div class="header-info">
@@ -104,25 +113,25 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
 
                 <!-- Informações principais -->
                 <div class="info-grid">
-                  <div class="info-card">
-                    <app-icon name="box" [size]="18" class="info-icon" />
-                    <div>
-                      <span class="info-label">Marca</span>
-                      <span class="info-value">{{ medicamento()!.marca }}</span>
+                  @if (medicamento()!.marca) {
+                    <div class="info-card">
+                      <app-icon name="box" [size]="18" class="info-icon" />
+                      <div>
+                        <span class="info-label">Marca</span>
+                        <span class="info-value">{{ medicamento()!.marca }}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div class="info-card">
-                    <app-icon name="package" [size]="18" class="info-icon" />
-                    <div>
-                      <span class="info-label">Laboratório</span>
-                      <span class="info-value">{{ medicamento()!.laboratorio }}</span>
-                    </div>
-                  </div>
+                  }
                   <div class="info-card">
                     <app-icon name="pill" [size]="18" class="info-icon" />
                     <div>
                       <span class="info-label">Tipo</span>
-                      <span class="info-value">{{ formatarTipo(medicamento()!.tipo) }}</span>
+                      <span class="info-value">
+                        {{ formatarTipo(medicamento()!.tipo) }}
+                        @if (medicamento()!.dosagem) {
+                          <span class="dosagem-separator">·</span> {{ medicamento()!.dosagem }}
+                        }
+                      </span>
                     </div>
                   </div>
                   <div class="info-card">
@@ -261,48 +270,6 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
                   </div>
                 </div>
 
-                <!-- Seção: Fabricante -->
-                <div class="form-section">
-                  <h3 class="section-title">
-                    <app-icon name="package" [size]="18" />
-                    Fabricante
-                  </h3>
-
-                  <div class="form-row two-cols">
-                    <div class="form-field">
-                      <label for="marca" class="form-label">
-                        Marca <span class="required">*</span>
-                      </label>
-                      <input
-                        id="marca"
-                        type="text"
-                        formControlName="marca"
-                        class="form-input"
-                        [class.has-error]="isFieldInvalid('marca')"
-                      />
-                      @if (isFieldInvalid('marca')) {
-                        <span class="field-error">{{ getFieldError('marca') }}</span>
-                      }
-                    </div>
-
-                    <div class="form-field">
-                      <label for="laboratorio" class="form-label">
-                        Laboratório <span class="required">*</span>
-                      </label>
-                      <input
-                        id="laboratorio"
-                        type="text"
-                        formControlName="laboratorio"
-                        class="form-input"
-                        [class.has-error]="isFieldInvalid('laboratorio')"
-                      />
-                      @if (isFieldInvalid('laboratorio')) {
-                        <span class="field-error">{{ getFieldError('laboratorio') }}</span>
-                      }
-                    </div>
-                  </div>
-                </div>
-
                 <!-- Seção: Detalhes -->
                 <div class="form-section">
                   <h3 class="section-title">
@@ -332,6 +299,24 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
                     </div>
 
                     <div class="form-field">
+                      <label for="dosagem" class="form-label">
+                        Dosagem (opcional)
+                      </label>
+                      <input
+                        id="dosagem"
+                        type="text"
+                        formControlName="dosagem"
+                        class="form-input"
+                        placeholder="Ex: 500mg"
+                      />
+                      <span class="field-hint">
+                        Concentração ou dose do medicamento
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="form-row two-cols">
+                    <div class="form-field">
                       <label for="validade" class="form-label">
                         Data de Validade <span class="required">*</span>
                       </label>
@@ -345,6 +330,34 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
                       @if (isFieldInvalid('validade')) {
                         <span class="field-error">{{ getFieldError('validade') }}</span>
                       }
+                    </div>
+
+                    <div class="form-field">
+                      <label for="marca" class="form-label">
+                        Marca (opcional)
+                      </label>
+                      <input
+                        id="marca"
+                        type="text"
+                        formControlName="marca"
+                        class="form-input"
+                        placeholder="Ex: Medley"
+                      />
+                      <span class="field-hint">
+                        Nome da marca do fabricante
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-field">
+                      <app-image-upload
+                        label="Foto do Medicamento (opcional)"
+                        hint="Tire uma foto da caixa para facilitar a identificação"
+                        [existingUrl]="medicamento()!.fotoUrl || null"
+                        (fileSelected)="onImageSelected($event)"
+                        (fileRemoved)="onImageRemoved()"
+                      />
                     </div>
                   </div>
                 </div>
@@ -546,6 +559,22 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
         gap: var(--spacing-xl);
       }
 
+      /* Imagem do medicamento */
+      .med-image-container {
+        display: flex;
+        justify-content: center;
+        padding: var(--spacing-md);
+        background: var(--color-surface-variant);
+        border-radius: var(--border-radius-lg);
+      }
+
+      .med-image {
+        max-width: 100%;
+        max-height: 250px;
+        object-fit: contain;
+        border-radius: var(--border-radius-md);
+      }
+
       .detail-header {
         display: flex;
         justify-content: space-between;
@@ -587,7 +616,7 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
 
       .info-grid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: var(--spacing-md);
       }
 
@@ -627,6 +656,11 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
 
       .info-value.vencido {
         color: var(--color-danger);
+      }
+
+      .dosagem-separator {
+        color: var(--color-text-hint);
+        margin: 0 4px;
       }
 
       /* Quantidade */
@@ -784,6 +818,10 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
         border-radius: var(--border-radius-lg);
         transition: all var(--transition-fast);
 
+        &::placeholder {
+          color: var(--color-text-hint);
+        }
+
         &:focus {
           outline: none;
           border-color: var(--color-primary);
@@ -822,6 +860,11 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
         font-size: var(--font-size-sm);
         color: var(--color-text-secondary);
         cursor: pointer;
+      }
+
+      .field-hint {
+        font-size: var(--font-size-xs);
+        color: var(--color-text-hint);
       }
 
       .field-error {
@@ -914,6 +957,12 @@ export class MedicamentosDetailPageComponent implements OnInit {
   readonly excluindo = signal(false);
   readonly medicamento = computed(() => this.store.selected());
 
+  /** Arquivo de imagem selecionado */
+  readonly selectedImage = signal<File | null>(null);
+
+  /** Flag para indicar que a imagem existente foi removida */
+  readonly imageRemoved = signal(false);
+
   readonly deleteModalConfig: ConfirmModalConfig = {
     title: 'Excluir Medicamento',
     message: 'Tem certeza que deseja excluir este medicamento? Esta ação não pode ser desfeita.',
@@ -932,8 +981,8 @@ export class MedicamentosDetailPageComponent implements OnInit {
     nome: ['', [Validators.required, Validators.minLength(3)]],
     droga: ['', [Validators.required, Validators.minLength(3)]],
     generico: [false],
-    marca: ['', [Validators.required]],
-    laboratorio: ['', [Validators.required]],
+    marca: [''],
+    dosagem: [''],
     tipo: ['', [Validators.required]],
     validade: ['', [Validators.required]],
     quantidadeTotal: [null, [Validators.required, Validators.min(1)]],
@@ -970,14 +1019,30 @@ export class MedicamentosDetailPageComponent implements OnInit {
       nome: medicamento.nome,
       droga: medicamento.droga,
       generico: medicamento.generico,
-      marca: medicamento.marca,
-      laboratorio: medicamento.laboratorio,
+      marca: medicamento.marca || '',
+      dosagem: medicamento.dosagem || '',
       tipo: medicamento.tipo,
       validade: medicamento.validade,
       quantidadeTotal: medicamento.quantidadeTotal,
       quantidadeAtual: medicamento.quantidadeAtual,
       observacoes: medicamento.observacoes || '',
     });
+  }
+
+  /**
+   * Handler para seleção de imagem.
+   */
+  onImageSelected(file: File): void {
+    this.selectedImage.set(file);
+    this.imageRemoved.set(false);
+  }
+
+  /**
+   * Handler para remoção de imagem.
+   */
+  onImageRemoved(): void {
+    this.selectedImage.set(null);
+    this.imageRemoved.set(true);
   }
 
   ativarModoEdicao(): void {
@@ -991,6 +1056,8 @@ export class MedicamentosDetailPageComponent implements OnInit {
 
   cancelarEdicao(): void {
     this.isEditMode.set(false);
+    this.selectedImage.set(null);
+    this.imageRemoved.set(false);
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { editar: null },
@@ -1081,8 +1148,8 @@ export class MedicamentosDetailPageComponent implements OnInit {
       nome: this.form.value.nome,
       droga: this.form.value.droga,
       generico: this.form.value.generico || false,
-      marca: this.form.value.marca,
-      laboratorio: this.form.value.laboratorio,
+      marca: this.form.value.marca || undefined,
+      dosagem: this.form.value.dosagem || undefined,
       tipo: this.form.value.tipo,
       validade: this.form.value.validade,
       quantidadeTotal: this.form.value.quantidadeTotal,
@@ -1090,11 +1157,23 @@ export class MedicamentosDetailPageComponent implements OnInit {
       observacoes: this.form.value.observacoes || undefined,
     };
 
+    // Atualizar dados do medicamento
     const medicamento = await this.store.update(this.medicamentoId, dto);
 
     if (medicamento) {
+      // Se houver nova imagem selecionada, fazer upload
+      if (this.selectedImage()) {
+        await this.store.uploadFoto(this.medicamentoId, this.selectedImage()!);
+      }
+      // Se a imagem foi removida (e não foi adicionada nova), remover do servidor
+      else if (this.imageRemoved() && medicamento.fotoUrl) {
+        await this.store.removeFoto(this.medicamentoId);
+      }
+
       this.notification.success('Medicamento atualizado com sucesso!', { title: 'Sucesso' });
       this.isEditMode.set(false);
+      this.selectedImage.set(null);
+      this.imageRemoved.set(false);
       this.router.navigate([], {
         relativeTo: this.route,
         queryParams: { editar: null },

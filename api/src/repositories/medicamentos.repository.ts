@@ -77,14 +77,6 @@ export class MedicamentosRepository implements IMedicamentosRepository {
         );
       }
 
-      if (filtros?.laboratorio) {
-        query = query.where(
-          FIRESTORE_INDEXED_FIELDS.LABORATORIO,
-          "==",
-          filtros.laboratorio
-        );
-      }
-
       // Ordenação
       // NOTA: Para evitar necessidade de índices compostos, sempre ordenamos por criadoEm no Firestore
       // A ordenação por outros campos será feita em memória no serviço

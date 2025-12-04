@@ -24,7 +24,7 @@ export type OrdenacaoDirecao = "asc" | "desc";
  * - Filtro por status de validade
  * - Filtro por tipo de medicamento
  * - Filtro por genérico/referência
- * - Filtro por laboratório
+ * - Filtro por marca
  * - Filtro por quantidade baixa
  * - Ordenação por campo e direção
  */
@@ -41,8 +41,8 @@ export interface MedicamentosFiltros {
   /** Filtro por genérico (true = genérico, false = referência, null = todos) */
   generico?: boolean | null;
 
-  /** Filtro por laboratório */
-  laboratorio?: string | null;
+  /** Filtro por marca */
+  marca?: string | null;
 
   /** Filtro por quantidade baixa (< limite) */
   quantidadeBaixa?: boolean;
@@ -65,7 +65,7 @@ export const FILTROS_PADRAO: MedicamentosFiltros = {
   status: null,
   tipo: null,
   generico: null,
-  laboratorio: null,
+  marca: null,
   quantidadeBaixa: false,
   limiteQuantidadeBaixa: 5,
   ordenarPor: null,

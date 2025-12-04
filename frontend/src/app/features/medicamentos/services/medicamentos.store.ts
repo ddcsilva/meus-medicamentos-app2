@@ -11,7 +11,7 @@ import {
 } from "../models";
 import {
   aplicarFiltros,
-  extrairLaboratorios,
+  extrairMarcas,
   extrairTipos,
   temFiltrosAtivos,
 } from "../utils/medicamentos-filter.utils";
@@ -187,10 +187,10 @@ export class MedicamentosStore {
   });
 
   /**
-   * Lista de laboratórios únicos (para dropdown de filtro).
+   * Lista de marcas únicas (para dropdown de filtro).
    */
-  readonly laboratoriosDisponiveis = computed(() => {
-    return extrairLaboratorios(this._items());
+  readonly marcasDisponiveis = computed(() => {
+    return extrairMarcas(this._items());
   });
 
   /**
@@ -605,12 +605,12 @@ export class MedicamentosStore {
   }
 
   /**
-   * Define o filtro de laboratório.
+   * Define o filtro de marca.
    *
-   * @param laboratorio - Nome do laboratório
+   * @param marca - Nome da marca
    */
-  setLaboratorioFilter(laboratorio: string | null): void {
-    this._filters.update((current) => ({ ...current, laboratorio }));
+  setMarcaFilter(marca: string | null): void {
+    this._filters.update((current) => ({ ...current, marca }));
   }
 
   /**
@@ -635,6 +635,71 @@ export class MedicamentosStore {
       ...current,
       ordem: current.ordem === "asc" ? "desc" : "asc",
     }));
+  }
+
+  // ========================================
+  // MÉTODOS DE AÇÃO - FOTO
+  // ========================================
+
+  /**
+   * Faz upload de foto para um medicamento.
+   *
+   * @param id - ID do medicamento
+   * @param file - Arquivo de imagem
+   * @returns Medicamento atualizado ou null
+   */
+  async uploadFoto(id: string, file: File): Promise<Medicamento | null> {
+    this._setItemLoading(id, true);
+    this._error.set(null);
+
+    try {
+      const medicamento = await firstValueFrom(this.api.uploadFoto(id, file));
+
+      // Atualiza na lista local
+      this._updateItemInList(medicamento);
+
+      // Atualiza selected se for o mesmo
+      if (this._selected()?.id === id) {
+        this._selected.set(medicamento);
+      }
+
+      return medicamento;
+    } catch (error) {
+      this._handleError(error, "uploadFoto");
+      return null;
+    } finally {
+      this._setItemLoading(id, false);
+    }
+  }
+
+  /**
+   * Remove a foto de um medicamento.
+   *
+   * @param id - ID do medicamento
+   * @returns Medicamento atualizado ou null
+   */
+  async removeFoto(id: string): Promise<Medicamento | null> {
+    this._setItemLoading(id, true);
+    this._error.set(null);
+
+    try {
+      const medicamento = await firstValueFrom(this.api.removeFoto(id));
+
+      // Atualiza na lista local
+      this._updateItemInList(medicamento);
+
+      // Atualiza selected se for o mesmo
+      if (this._selected()?.id === id) {
+        this._selected.set(medicamento);
+      }
+
+      return medicamento;
+    } catch (error) {
+      this._handleError(error, "removeFoto");
+      return null;
+    } finally {
+      this._setItemLoading(id, false);
+    }
   }
 
   // ========================================

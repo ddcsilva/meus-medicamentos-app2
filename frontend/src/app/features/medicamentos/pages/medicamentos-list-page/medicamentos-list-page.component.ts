@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, ViewChild } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { BadgeComponent } from '../../../../shared/ui/badge/badge.component';
 import { ButtonComponent } from '../../../../shared/ui/button/button.component';
 import { CardComponent } from '../../../../shared/ui/card/card.component';
 import { EmptyStateComponent } from '../../../../shared/ui/empty-state/empty-state.component';
@@ -11,7 +12,6 @@ import { InputComponent } from '../../../../shared/ui/input/input.component';
 import { LoadingComponent } from '../../../../shared/ui/loading/loading.component';
 import { PageLoadingComponent } from '../../../../shared/ui/page-loading/page-loading.component';
 import { StatusBadgeComponent } from '../../../../shared/ui/status-badge/status-badge.component';
-import { ConfirmModalComponent, ConfirmModalConfig } from '../../../../shared/ui/confirm-modal/confirm-modal.component';
 import { QuantidadeControlComponent } from '../../components/quantidade-control/quantidade-control.component';
 import { Medicamento, StatusValidade } from '../../models';
 import { MedicamentosStore } from '../../services/medicamentos.store';
@@ -28,6 +28,7 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
     ButtonComponent,
     CardComponent,
     StatusBadgeComponent,
+    BadgeComponent,
     LoadingComponent,
     PageLoadingComponent,
     EmptyStateComponent,
@@ -35,7 +36,6 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
     QuantidadeControlComponent,
     IconComponent,
     InputComponent,
-    ConfirmModalComponent,
   ],
   template: `
     <div class="medicamentos-page">
@@ -67,15 +67,20 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
           <span class="stat-value">{{ store.validosCount() }}</span>
           <span class="stat-label">Válidos</span>
         </div>
-        <div class="stat-item stat-prestes">
+        <div class="stat-item stat-vencendo">
           <app-icon name="alert-circle" [size]="20" class="stat-icon" />
           <span class="stat-value">{{ store.prestesCount() }}</span>
-          <span class="stat-label">Prestes</span>
+          <span class="stat-label">Vencendo</span>
         </div>
         <div class="stat-item stat-vencido">
           <app-icon name="x-circle" [size]="20" class="stat-icon" />
           <span class="stat-value">{{ store.vencidosCount() }}</span>
           <span class="stat-label">Vencidos</span>
+        </div>
+        <div class="stat-item stat-sem-estoque">
+          <app-icon name="package" [size]="20" class="stat-icon" />
+          <span class="stat-value">{{ store.semEstoqueCount() }}</span>
+          <span class="stat-label">Sem Estoque</span>
         </div>
       </div>
 
@@ -96,8 +101,8 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
           <button
             type="button"
             class="filter-chip"
-            [class.active]="!store.filters().status"
-            (click)="filtrarPorStatus(null)"
+            [class.active]="!store.filters().status && !filtroSemEstoque()"
+            (click)="limparFiltrosStatus()"
           >
             Todos
           </button>
@@ -112,12 +117,12 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
           </button>
           <button
             type="button"
-            class="filter-chip filter-prestes"
+            class="filter-chip filter-vencendo"
             [class.active]="store.filters().status === 'prestes'"
             (click)="filtrarPorStatus('prestes')"
           >
             <app-icon name="clock" [size]="14" />
-            Prestes
+            Vencendo
           </button>
           <button
             type="button"
@@ -127,6 +132,15 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
           >
             <app-icon name="x" [size]="14" />
             Vencidos
+          </button>
+          <button
+            type="button"
+            class="filter-chip filter-sem-estoque"
+            [class.active]="filtroSemEstoque()"
+            (click)="toggleFiltroSemEstoque()"
+          >
+            <app-icon name="package" [size]="14" />
+            Sem Estoque
           </button>
         </div>
       </div>
@@ -148,7 +162,7 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
       <!-- Lista de medicamentos -->
       @if (!store.loading()) {
         <div class="medicamentos-grid">
-          @for (med of store.filteredItems(); track med.id) {
+          @for (med of getFilteredItems(); track med.id) {
             <app-card
               variant="elevated"
               [clickable]="true"
@@ -161,7 +175,12 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
                     <h3 class="med-nome">{{ med.nome }}</h3>
                     <p class="med-droga">{{ med.droga }}</p>
                   </div>
-                  <app-status-badge [status]="med.statusValidade" />
+                  <div class="badges-container">
+                    <app-status-badge [status]="med.statusValidade" />
+                    @if (med.quantidadeAtual === 0) {
+                      <app-badge variant="danger" [dot]="true">Sem estoque</app-badge>
+                    }
+                  </div>
                 </div>
 
                 @if (med.generico) {
@@ -176,7 +195,12 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
                     <app-icon name="box" [size]="16" class="info-icon" />
                     <div>
                       <span class="info-label">Tipo</span>
-                      <span class="info-value">{{ med.tipo }}</span>
+                      <span class="info-value">
+                        {{ formatarTipo(med.tipo) }}
+                        @if (med.dosagem) {
+                          <span class="dosagem-separator">·</span> {{ med.dosagem }}
+                        }
+                      </span>
                     </div>
                   </div>
                   <div class="info-item">
@@ -185,7 +209,7 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
                       <span class="info-label">Quantidade</span>
                       <span
                         class="info-value"
-                        [class.low-stock]="med.quantidadeAtual < 5"
+                        [class.low-stock]="med.quantidadeAtual < 5 && med.quantidadeAtual > 0"
                         [class.no-stock]="med.quantidadeAtual === 0"
                       >
                         {{ med.quantidadeAtual }} / {{ med.quantidadeTotal }}
@@ -228,7 +252,7 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
       }
 
       <!-- Estado vazio - Busca sem resultados -->
-      @if (!store.loading() && store.filteredItems().length === 0 && store.hasActiveFilters()) {
+      @if (!store.loading() && getFilteredItems().length === 0 && (store.hasActiveFilters() || filtroSemEstoque())) {
         <app-empty-state
           variant="search"
           iconName="search-x"
@@ -241,7 +265,7 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
       }
 
       <!-- Estado vazio - Sem medicamentos -->
-      @if (!store.loading() && store.items().length === 0 && !store.hasActiveFilters()) {
+      @if (!store.loading() && store.items().length === 0 && !store.hasActiveFilters() && !filtroSemEstoque()) {
         <app-empty-state
           iconName="pill"
           title="Nenhum medicamento cadastrado"
@@ -290,7 +314,7 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
       /* Estatísticas */
       .stats-bar {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(5, 1fr);
         gap: var(--spacing-md);
         margin-bottom: var(--spacing-xl);
       }
@@ -332,10 +356,13 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
       .stat-valido {
         .stat-icon, .stat-value { color: var(--color-success); }
       }
-      .stat-prestes {
+      .stat-vencendo {
         .stat-icon, .stat-value { color: var(--color-warning); }
       }
       .stat-vencido {
+        .stat-icon, .stat-value { color: var(--color-danger); }
+      }
+      .stat-sem-estoque {
         .stat-icon, .stat-value { color: var(--color-danger); }
       }
 
@@ -420,12 +447,17 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
         border-color: var(--color-success);
       }
 
-      .filter-prestes.active {
+      .filter-vencendo.active {
         background: var(--color-warning);
         border-color: var(--color-warning);
       }
 
       .filter-vencido.active {
+        background: var(--color-danger);
+        border-color: var(--color-danger);
+      }
+
+      .filter-sem-estoque.active {
         background: var(--color-danger);
         border-color: var(--color-danger);
       }
@@ -463,6 +495,14 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
       .med-title-group {
         flex: 1;
         min-width: 0;
+      }
+
+      .badges-container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: var(--spacing-xs);
+        flex-shrink: 0;
       }
 
       .med-nome {
@@ -539,6 +579,11 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
         font-weight: var(--font-weight-bold);
       }
 
+      .dosagem-separator {
+        color: var(--color-text-hint);
+        margin: 0 4px;
+      }
+
       .card-actions {
         display: flex;
         justify-content: space-between;
@@ -548,6 +593,12 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
       }
 
       /* Responsividade */
+      @media (max-width: 1023px) {
+        .stats-bar {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
       @media (max-width: 767px) {
         .page-header {
           flex-direction: column;
@@ -569,6 +620,12 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
         .medicamentos-grid {
           grid-template-columns: 1fr;
         }
+
+        .badges-container {
+          flex-direction: row;
+          flex-wrap: wrap;
+          gap: var(--spacing-xs);
+        }
       }
 
       @media (max-width: 479px) {
@@ -581,6 +638,16 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
           padding: 6px 12px;
           font-size: var(--font-size-xs);
         }
+
+        .card-header-row {
+          flex-direction: column;
+          gap: var(--spacing-sm);
+        }
+
+        .badges-container {
+          flex-direction: row;
+          align-items: flex-start;
+        }
       }
     `,
   ],
@@ -589,6 +656,9 @@ export class MedicamentosListPageComponent implements OnInit {
   readonly store = inject(MedicamentosStore);
   private readonly router = inject(Router);
   private readonly notification = inject(NotificationService);
+
+  /** Signal para controlar filtro de sem estoque */
+  readonly filtroSemEstoque = signal(false);
 
   ngOnInit(): void {
     this.store.loadAll();
@@ -599,7 +669,29 @@ export class MedicamentosListPageComponent implements OnInit {
   }
 
   filtrarPorStatus(status: StatusValidade | null): void {
+    this.filtroSemEstoque.set(false);
     this.store.setStatusFilter(status);
+  }
+
+  limparFiltrosStatus(): void {
+    this.filtroSemEstoque.set(false);
+    this.store.setStatusFilter(null);
+  }
+
+  toggleFiltroSemEstoque(): void {
+    this.store.setStatusFilter(null);
+    this.filtroSemEstoque.update(v => !v);
+  }
+
+  /**
+   * Retorna os itens filtrados, aplicando filtro de sem estoque se ativo.
+   */
+  getFilteredItems(): Medicamento[] {
+    const items = this.store.filteredItems();
+    if (this.filtroSemEstoque()) {
+      return items.filter(med => med.quantidadeAtual === 0);
+    }
+    return items;
   }
 
   onBusca(event: Event): void {
@@ -608,6 +700,7 @@ export class MedicamentosListPageComponent implements OnInit {
   }
 
   limparFiltros(): void {
+    this.filtroSemEstoque.set(false);
     this.store.clearFilters();
   }
 
@@ -638,5 +731,21 @@ export class MedicamentosListPageComponent implements OnInit {
   formatarData(dataISO: string): string {
     const data = new Date(dataISO);
     return data.toLocaleDateString('pt-BR');
+  }
+
+  formatarTipo(tipo: string): string {
+    const formatMap: Record<string, string> = {
+      comprimido: 'Comprimido',
+      capsula: 'Cápsula',
+      liquido: 'Líquido',
+      spray: 'Spray',
+      creme: 'Creme',
+      pomada: 'Pomada',
+      gel: 'Gel',
+      gotas: 'Gotas',
+      injetavel: 'Injetável',
+      outro: 'Outro',
+    };
+    return formatMap[tipo] || tipo;
   }
 }

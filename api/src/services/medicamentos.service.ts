@@ -486,7 +486,7 @@ export class MedicamentosService implements IMedicamentosService {
         med.nome,
         med.droga,
         med.marca,
-        med.laboratorio,
+        med.dosagem,
         med.observacoes,
       ];
 
@@ -553,14 +553,6 @@ export class MedicamentosService implements IMedicamentosService {
 
     if (!dto.droga?.trim()) {
       erros.push("Droga/princípio ativo é obrigatório");
-    }
-
-    if (!dto.marca?.trim()) {
-      erros.push("Marca é obrigatória");
-    }
-
-    if (!dto.laboratorio?.trim()) {
-      erros.push("Laboratório é obrigatório");
     }
 
     if (!dto.tipo) {
@@ -672,8 +664,8 @@ export class MedicamentosService implements IMedicamentosService {
       ...dto,
       nome: dto.nome.trim(),
       droga: dto.droga.trim(),
-      marca: dto.marca.trim(),
-      laboratorio: dto.laboratorio.trim(),
+      marca: dto.marca?.trim(),
+      dosagem: dto.dosagem?.trim(),
       fotoUrl: dto.fotoUrl?.trim(),
       observacoes: dto.observacoes?.trim(),
     };
@@ -697,8 +689,8 @@ export class MedicamentosService implements IMedicamentosService {
       normalizado.marca = dto.marca.trim();
     }
 
-    if (dto.laboratorio !== undefined) {
-      normalizado.laboratorio = dto.laboratorio.trim();
+    if (dto.dosagem !== undefined) {
+      normalizado.dosagem = dto.dosagem.trim();
     }
 
     if (dto.fotoUrl !== undefined) {

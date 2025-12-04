@@ -66,7 +66,7 @@ export function firestoreToMedicamento(
     droga: data.droga,
     generico: data.generico,
     marca: data.marca,
-    laboratorio: data.laboratorio,
+    dosagem: data.dosagem,
     tipo: data.tipo,
     validade: timestampToDateString(data.validade),
     statusValidade: calcularStatusValidade(data.validade),
@@ -137,8 +137,8 @@ export function createDtoToFirestore(
     nome: dto.nome.trim(),
     droga: dto.droga.trim(),
     generico: dto.generico,
-    marca: dto.marca.trim(),
-    laboratorio: dto.laboratorio.trim(),
+    marca: dto.marca?.trim(),
+    dosagem: dto.dosagem?.trim(),
     tipo: dto.tipo,
     validade: dateStringToTimestamp(dto.validade),
     quantidadeTotal: dto.quantidadeTotal,
@@ -182,8 +182,8 @@ export function updateDtoToFirestore(
     update.marca = dto.marca.trim();
   }
 
-  if (dto.laboratorio !== undefined) {
-    update.laboratorio = dto.laboratorio.trim();
+  if (dto.dosagem !== undefined) {
+    update.dosagem = dto.dosagem.trim();
   }
 
   if (dto.tipo !== undefined) {
@@ -247,7 +247,7 @@ export function medicamentoToResponseDto(
     droga: medicamento.droga,
     generico: medicamento.generico,
     marca: medicamento.marca,
-    laboratorio: medicamento.laboratorio,
+    dosagem: medicamento.dosagem,
     tipo: medicamento.tipo,
     validade: medicamento.validade,
     statusValidade: medicamento.statusValidade,
@@ -316,5 +316,3 @@ export function isValidDateString(dateString: string): boolean {
   const date = new Date(dateString);
   return date instanceof Date && !isNaN(date.getTime());
 }
-
-

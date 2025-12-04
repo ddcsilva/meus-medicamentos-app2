@@ -86,18 +86,16 @@ export const createMedicamentoValidation: ValidationChain[] = [
     .withMessage("Genérico deve ser true ou false"),
 
   body("marca")
+    .optional()
     .trim()
-    .notEmpty()
-    .withMessage("Marca é obrigatória")
     .isLength({ max: 200 })
     .withMessage("Marca deve ter no máximo 200 caracteres"),
 
-  body("laboratorio")
+  body("dosagem")
+    .optional()
     .trim()
-    .notEmpty()
-    .withMessage("Laboratório é obrigatório")
-    .isLength({ max: 200 })
-    .withMessage("Laboratório deve ter no máximo 200 caracteres"),
+    .isLength({ max: 50 })
+    .withMessage("Dosagem deve ter no máximo 50 caracteres"),
 
   body("tipo")
     .trim()
@@ -164,18 +162,14 @@ export const updateMedicamentoValidation: ValidationChain[] = [
   body("marca")
     .optional()
     .trim()
-    .notEmpty()
-    .withMessage("Marca não pode ser vazia")
     .isLength({ max: 200 })
     .withMessage("Marca deve ter no máximo 200 caracteres"),
 
-  body("laboratorio")
+  body("dosagem")
     .optional()
     .trim()
-    .notEmpty()
-    .withMessage("Laboratório não pode ser vazio")
-    .isLength({ max: 200 })
-    .withMessage("Laboratório deve ter no máximo 200 caracteres"),
+    .isLength({ max: 50 })
+    .withMessage("Dosagem deve ter no máximo 50 caracteres"),
 
   body("tipo")
     .optional()
@@ -258,12 +252,6 @@ export const listFiltersValidation: ValidationChain[] = [
     .isIn(["true", "false"])
     .withMessage("Genérico deve ser true ou false"),
 
-  query("laboratorio")
-    .optional()
-    .trim()
-    .isLength({ max: 200 })
-    .withMessage("Laboratório deve ter no máximo 200 caracteres"),
-
   query("ordenarPor")
     .optional()
     .isIn(ORDENACAO_VALIDA)
@@ -284,5 +272,3 @@ export const listFiltersValidation: ValidationChain[] = [
     .isInt({ min: 1, max: 100 })
     .withMessage("Tamanho da página deve ser entre 1 e 100"),
 ];
-
-
