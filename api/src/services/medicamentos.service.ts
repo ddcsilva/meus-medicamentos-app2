@@ -440,12 +440,23 @@ export class MedicamentosService implements IMedicamentosService {
 
   /**
    * Extrai o caminho do Storage de uma URL pública.
+   * Suporta múltiplos formatos de URL do Firebase Storage.
    */
   private extractStoragePath(url: string): string | null {
     try {
-      // URL formato: https://storage.googleapis.com/bucket/path/to/file
-      const match = url.match(/storage\.googleapis\.com\/[^/]+\/(.+)$/);
-      return match ? match[1] : null;
+      // Formato 1: https://firebasestorage.googleapis.com/v0/b/bucket/o/path%2Fto%2Ffile?alt=media
+      const firebaseStorageMatch = url.match(/firebasestorage\.googleapis\.com\/v0\/b\/[^/]+\/o\/([^?]+)/);
+      if (firebaseStorageMatch) {
+        return decodeURIComponent(firebaseStorageMatch[1]);
+      }
+
+      // Formato 2: https://storage.googleapis.com/bucket/path/to/file
+      const storageMatch = url.match(/storage\.googleapis\.com\/[^/]+\/(.+)$/);
+      if (storageMatch) {
+        return storageMatch[1];
+      }
+
+      return null;
     } catch {
       return null;
     }

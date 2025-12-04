@@ -5,6 +5,9 @@ rules_version = '2';
  * 
  * Estrutura de arquivos:
  * - medicamentos/{userId}/{medicamentoId}/foto.{ext}
+ * 
+ * NOTA: As fotos de medicamentos são públicas para leitura (via URL)
+ * para permitir exibição na aplicação. Apenas o dono pode criar/modificar/excluir.
  */
 service firebase.storage {
   match /b/{bucket}/o {
@@ -34,8 +37,10 @@ service firebase.storage {
     // =========================================================================
     
     match /medicamentos/{userId}/{medicamentoId}/{fileName} {
-      // Leitura: apenas o dono pode ler
-      allow read: if isOwner(userId);
+      // Leitura: pública para permitir exibição de imagens via URL
+      // A segurança é garantida pelo fato de que apenas usuários autenticados
+      // podem obter as URLs (via API protegida)
+      allow read: if true;
       
       // Upload: apenas o dono, arquivo deve ser imagem válida
       allow create: if isOwner(userId) && isValidImage();

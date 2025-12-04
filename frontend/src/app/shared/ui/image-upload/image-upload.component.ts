@@ -1,7 +1,6 @@
 import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IconComponent } from '../icon/icon.component';
-import { ButtonComponent } from '../button/button.component';
 
 /**
  * Componente de upload de imagem com preview inline.
@@ -12,11 +11,13 @@ import { ButtonComponent } from '../button/button.component';
  * - Exibição de imagem existente (para edição)
  * - Remoção de imagem selecionada
  * - Limite de tamanho configurável
+ * - Indicador de loading durante upload
  *
  * @example
  * <app-image-upload
  *   label="Foto do Medicamento"
  *   [existingUrl]="medicamento.fotoUrl"
+ *   [uploading]="isUploading"
  *   (fileSelected)="onFileSelected($event)"
  *   (fileRemoved)="onFileRemoved()"
  * />
@@ -24,7 +25,7 @@ import { ButtonComponent } from '../button/button.component';
 @Component({
   selector: 'app-image-upload',
   standalone: true,
-  imports: [CommonModule, IconComponent, ButtonComponent],
+  imports: [CommonModule, IconComponent],
   template: `
     <div class="image-upload-wrapper">
       <label *ngIf="label" class="upload-label">
@@ -37,14 +38,29 @@ import { ButtonComponent } from '../button/button.component';
         [class.has-image]="hasImage()"
         [class.is-dragging]="isDragging()"
         [class.has-error]="error"
+        [class.is-uploading]="uploading"
         (dragover)="onDragOver($event)"
         (dragleave)="onDragLeave($event)"
         (drop)="onDrop($event)"
       >
+        <!-- Overlay de loading durante upload -->
+        @if (uploading) {
+          <div class="upload-overlay">
+            <div class="upload-spinner">
+              <app-icon name="loader-2" [size]="32" class="spin" />
+            </div>
+            <span class="upload-progress-text">Enviando imagem...</span>
+          </div>
+        }
+
         <!-- Preview da imagem -->
-        @if (hasImage()) {
+        @if (hasImage() && !uploading) {
           <div class="image-preview">
-            <img [src]="previewUrl()" [alt]="label || 'Preview da imagem'" />
+            <img 
+              [src]="previewUrl()" 
+              [alt]="label || 'Preview da imagem'"
+              (error)="onImageError($event)"
+            />
             <div class="image-overlay">
               <button
                 type="button"
@@ -56,7 +72,7 @@ import { ButtonComponent } from '../button/button.component';
               </button>
             </div>
           </div>
-        } @else {
+        } @else if (!uploading) {
           <!-- Área de upload -->
           <div class="upload-placeholder" (click)="triggerFileInput()">
             <app-icon name="image-plus" [size]="48" class="upload-icon" />
@@ -77,11 +93,13 @@ import { ButtonComponent } from '../button/button.component';
           (change)="onFileChange($event)"
           class="file-input"
           [attr.aria-label]="label || 'Upload de imagem'"
+          [disabled]="uploading"
         />
       </div>
 
       <!-- Erro -->
       <span *ngIf="error" class="upload-error">
+        <app-icon name="alert-circle" [size]="14" />
         {{ error }}
       </span>
 
@@ -122,7 +140,7 @@ import { ButtonComponent } from '../button/button.component';
       overflow: hidden;
       min-height: 180px;
 
-      &:hover:not(.has-image) {
+      &:hover:not(.has-image):not(.is-uploading) {
         border-color: var(--color-primary-light);
         background-color: var(--color-primary-subtle);
       }
@@ -145,6 +163,60 @@ import { ButtonComponent } from '../button/button.component';
           background-color: var(--color-danger-bg);
         }
       }
+
+      &.is-uploading {
+        border-color: var(--color-primary);
+        background-color: var(--color-primary-subtle);
+        pointer-events: none;
+      }
+    }
+
+    .upload-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-md);
+      background-color: rgba(var(--color-primary-rgb, 59, 130, 246), 0.1);
+      z-index: 10;
+    }
+
+    .upload-spinner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      border-radius: var(--border-radius-full);
+      background-color: var(--color-primary-subtle);
+    }
+
+    .upload-spinner app-icon {
+      color: var(--color-primary);
+    }
+
+    .spin {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .upload-progress-text {
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-primary);
     }
 
     .upload-placeholder {
@@ -249,6 +321,9 @@ import { ButtonComponent } from '../button/button.component';
     }
 
     .upload-error {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
       font-size: var(--font-size-xs);
       color: var(--color-danger);
     }
@@ -297,6 +372,9 @@ export class ImageUploadComponent {
   /** Dica de uso */
   @Input() hint = '';
 
+  /** Indica se está fazendo upload */
+  @Input() uploading = false;
+
   /** Evento emitido quando um arquivo é selecionado */
   @Output() fileSelected = new EventEmitter<File>();
 
@@ -312,10 +390,16 @@ export class ImageUploadComponent {
   /** URL do preview gerado localmente */
   private localPreviewUrl = signal<string | null>(null);
 
+  /** Flag para erro de carregamento da imagem */
+  private imageLoadError = signal(false);
+
   /**
    * Verifica se há uma imagem para exibir (existente ou selecionada).
    */
   hasImage(): boolean {
+    if (this.imageLoadError()) {
+      return false;
+    }
     return !!(this.localPreviewUrl() || this.existingUrl);
   }
 
@@ -324,6 +408,15 @@ export class ImageUploadComponent {
    */
   previewUrl(): string | null {
     return this.localPreviewUrl() || this.existingUrl;
+  }
+
+  /**
+   * Handler para erro de carregamento da imagem.
+   */
+  onImageError(event: Event): void {
+    console.warn('[ImageUpload] Erro ao carregar imagem:', this.previewUrl());
+    this.imageLoadError.set(true);
+    // Não limpa a existingUrl, apenas marca o erro
   }
 
   /**
@@ -351,7 +444,9 @@ export class ImageUploadComponent {
   onDragOver(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
-    this.isDragging.set(true);
+    if (!this.uploading) {
+      this.isDragging.set(true);
+    }
   }
 
   /**
@@ -370,6 +465,8 @@ export class ImageUploadComponent {
     event.preventDefault();
     event.stopPropagation();
     this.isDragging.set(false);
+
+    if (this.uploading) return;
 
     const file = event.dataTransfer?.files?.[0];
     if (file) {
@@ -398,6 +495,7 @@ export class ImageUploadComponent {
     const reader = new FileReader();
     reader.onload = (e) => {
       this.localPreviewUrl.set(e.target?.result as string);
+      this.imageLoadError.set(false);
     };
     reader.readAsDataURL(file);
 
@@ -413,6 +511,7 @@ export class ImageUploadComponent {
   removeImage(): void {
     this.selectedFile.set(null);
     this.localPreviewUrl.set(null);
+    this.imageLoadError.set(false);
     this.fileRemoved.emit();
 
     // Limpar input

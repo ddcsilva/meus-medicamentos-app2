@@ -355,6 +355,7 @@ import { MedicamentosStore } from '../../services/medicamentos.store';
                         label="Foto do Medicamento (opcional)"
                         hint="Tire uma foto da caixa para facilitar a identificação"
                         [existingUrl]="medicamento()!.fotoUrl || null"
+                        [uploading]="uploadingPhoto()"
                         (fileSelected)="onImageSelected($event)"
                         (fileRemoved)="onImageRemoved()"
                       />
@@ -955,6 +956,7 @@ export class MedicamentosDetailPageComponent implements OnInit {
   private medicamentoId: string | null = null;
   readonly isEditMode = signal(false);
   readonly excluindo = signal(false);
+  readonly uploadingPhoto = signal(false);
   readonly medicamento = computed(() => this.store.selected());
 
   /** Arquivo de imagem selecionado */
@@ -1163,7 +1165,12 @@ export class MedicamentosDetailPageComponent implements OnInit {
     if (medicamento) {
       // Se houver nova imagem selecionada, fazer upload
       if (this.selectedImage()) {
-        await this.store.uploadFoto(this.medicamentoId, this.selectedImage()!);
+        this.uploadingPhoto.set(true);
+        try {
+          await this.store.uploadFoto(this.medicamentoId, this.selectedImage()!);
+        } finally {
+          this.uploadingPhoto.set(false);
+        }
       }
       // Se a imagem foi removida (e não foi adicionada nova), remover do servidor
       else if (this.imageRemoved() && medicamento.fotoUrl) {

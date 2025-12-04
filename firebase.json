@@ -1,4 +1,37 @@
 {
+  "hosting": {
+    "public": "frontend/dist/meus-medicamentos/browser",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css|woff|woff2|ttf|eot|svg|png|jpg|jpeg|gif|ico)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=31536000"
+          }
+        ]
+      },
+      {
+        "source": "**/*.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      }
+    ],
+    "predeploy": [
+      "npm --prefix frontend run build -- --configuration production"
+    ]
+  },
   "functions": [
     {
       "source": "functions",
@@ -42,5 +75,3 @@
     "singleProjectMode": true
   }
 }
-
-

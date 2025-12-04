@@ -16,7 +16,7 @@ let isInitialized = false;
  * 2. Variáveis de ambiente individuais (PROJECT_ID, PRIVATE_KEY, CLIENT_EMAIL)
  * 3. Credenciais padrão do ambiente (Application Default Credentials)
  */
-function getCredentials(): admin.credential.Credential | undefined {
+function getCredentials(): { credential: admin.credential.Credential; projectId?: string } | undefined {
   const { firebase } = env;
 
   // Opção 1: Arquivo de credenciais
@@ -31,7 +31,10 @@ function getCredentials(): admin.credential.Credential | undefined {
       );
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const serviceAccount = require(absolutePath);
-      return admin.credential.cert(serviceAccount);
+      return {
+        credential: admin.credential.cert(serviceAccount),
+        projectId: serviceAccount.project_id,
+      };
     } else {
       console.warn(
         `[Firebase] Arquivo de credenciais não encontrado: ${absolutePath}`
@@ -42,18 +45,24 @@ function getCredentials(): admin.credential.Credential | undefined {
   // Opção 2: Variáveis de ambiente individuais
   if (firebase.projectId && firebase.privateKey && firebase.clientEmail) {
     console.info("[Firebase] Carregando credenciais de variáveis de ambiente");
-    return admin.credential.cert({
+    return {
+      credential: admin.credential.cert({
+        projectId: firebase.projectId,
+        privateKey: firebase.privateKey,
+        clientEmail: firebase.clientEmail,
+      }),
       projectId: firebase.projectId,
-      privateKey: firebase.privateKey,
-      clientEmail: firebase.clientEmail,
-    });
+    };
   }
 
   // Opção 3: Credenciais padrão do ambiente (GCP, Cloud Functions, etc.)
   console.info(
     "[Firebase] Tentando usar Application Default Credentials (ADC)"
   );
-  return admin.credential.applicationDefault();
+  return {
+    credential: admin.credential.applicationDefault(),
+    projectId: firebase.projectId,
+  };
 }
 
 /**
@@ -68,14 +77,20 @@ export function initializeFirebase(): admin.app.App {
   }
 
   try {
-    const credential = getCredentials();
+    const credentialsInfo = getCredentials();
+    const projectId = env.firebase.projectId || credentialsInfo?.projectId;
+    
+    // Determina o bucket do Storage
+    const storageBucket = env.firebase.storageBucket || 
+      (projectId ? `${projectId}.firebasestorage.app` : undefined);
+
+    console.info(`[Firebase] Project ID: ${projectId}`);
+    console.info(`[Firebase] Storage Bucket: ${storageBucket}`);
 
     const app = admin.initializeApp({
-      credential,
-      projectId: env.firebase.projectId,
-      storageBucket: env.firebase.projectId
-        ? `${env.firebase.projectId}.appspot.com`
-        : undefined,
+      credential: credentialsInfo?.credential,
+      projectId,
+      storageBucket,
     });
 
     isInitialized = true;

@@ -11,7 +11,6 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { ButtonComponent } from '../../../../shared/ui/button/button.component';
 import { CardComponent } from '../../../../shared/ui/card/card.component';
 import { IconComponent } from '../../../../shared/ui/icon/icon.component';
-import { LoadingComponent } from '../../../../shared/ui/loading/loading.component';
 import { ImageUploadComponent } from '../../../../shared/ui/image-upload/image-upload.component';
 import { MedicamentosStore } from '../../services/medicamentos.store';
 import { CreateMedicamentoDto, TipoMedicamento } from '../../models';
@@ -28,7 +27,6 @@ import { CreateMedicamentoDto, TipoMedicamento } from '../../models';
     RouterLink,
     ButtonComponent,
     CardComponent,
-    LoadingComponent,
     IconComponent,
     ImageUploadComponent,
   ],
@@ -208,6 +206,7 @@ import { CreateMedicamentoDto, TipoMedicamento } from '../../models';
                 <app-image-upload
                   label="Foto do Medicamento (opcional)"
                   hint="Tire uma foto da caixa para facilitar a identificação"
+                  [uploading]="uploadingPhoto()"
                   (fileSelected)="onImageSelected($event)"
                   (fileRemoved)="onImageRemoved()"
                 />
@@ -554,6 +553,9 @@ export class MedicamentosNewPageComponent {
   /** Arquivo de imagem selecionado */
   readonly selectedImage = signal<File | null>(null);
 
+  /** Flag para indicar que está fazendo upload da foto */
+  readonly uploadingPhoto = signal(false);
+
   readonly tiposMedicamento: TipoMedicamento[] = [
     'comprimido', 'capsula', 'liquido', 'spray', 'creme',
     'pomada', 'gel', 'gotas', 'injetavel', 'outro',
@@ -636,7 +638,12 @@ export class MedicamentosNewPageComponent {
     if (medicamento) {
       // Se houver imagem selecionada, fazer upload
       if (this.selectedImage()) {
-        await this.store.uploadFoto(medicamento.id, this.selectedImage()!);
+        this.uploadingPhoto.set(true);
+        try {
+          await this.store.uploadFoto(medicamento.id, this.selectedImage()!);
+        } finally {
+          this.uploadingPhoto.set(false);
+        }
       }
 
       this.notification.success('Medicamento cadastrado com sucesso!', { title: 'Sucesso' });

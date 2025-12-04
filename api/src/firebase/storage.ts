@@ -25,16 +25,29 @@ export function getStorage(): admin.storage.Storage {
 }
 
 /**
+ * Obtém o nome do bucket do Storage.
+ * Prioriza variável de ambiente, depois usa o padrão do projeto.
+ */
+function getBucketName(): string | undefined {
+  // Prioriza bucket configurado explicitamente
+  if (env.firebase.storageBucket) {
+    return env.firebase.storageBucket;
+  }
+  // Fallback para o padrão do Firebase
+  if (env.firebase.projectId) {
+    return `${env.firebase.projectId}.firebasestorage.app`;
+  }
+  return undefined;
+}
+
+/**
  * Obtém o bucket padrão do Storage.
  *
  * @returns Bucket do Storage
  */
 export function getBucket(): ReturnType<admin.storage.Storage["bucket"]> {
   const storage = getStorage();
-  const bucketName = env.firebase.projectId
-    ? `${env.firebase.projectId}.appspot.com`
-    : undefined;
-
+  const bucketName = getBucketName();
   return storage.bucket(bucketName);
 }
 
@@ -65,10 +78,23 @@ export async function uploadFile(
   });
 
   if (metadata?.public) {
-    return `https://storage.googleapis.com/${bucket.name}/${destination}`;
+    return getPublicUrl(destination);
   }
 
   return destination;
+}
+
+/**
+ * Gera a URL pública de um arquivo no Storage.
+ * 
+ * @param filePath - Caminho do arquivo no bucket
+ * @returns URL pública do arquivo
+ */
+export function getPublicUrl(filePath: string): string {
+  const bucket = getBucket();
+  // Formato correto para Firebase Storage
+  const encodedPath = encodeURIComponent(filePath);
+  return `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media`;
 }
 
 /**
@@ -96,10 +122,21 @@ export async function uploadBuffer(
   await file.save(buffer, {
     contentType: metadata?.contentType,
     public: metadata?.public ?? false,
+    metadata: {
+      // Adiciona cache control para melhor performance
+      cacheControl: 'public, max-age=31536000',
+    },
   });
 
+  // Se for público, torna o arquivo acessível publicamente
   if (metadata?.public) {
-    return `https://storage.googleapis.com/${bucket.name}/${destination}`;
+    try {
+      await file.makePublic();
+    } catch (error) {
+      // Se falhar ao tornar público, ainda retorna a URL (pode funcionar com regras permissivas)
+      console.warn('[Storage] Não foi possível tornar o arquivo público:', error);
+    }
+    return getPublicUrl(destination);
   }
 
   return destination;
