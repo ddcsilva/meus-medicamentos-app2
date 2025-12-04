@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { NotificationService } from '../../../core/services/notification.service';
 import { Notification, NotificationType } from '../../../core/services/notification/models';
-import { ButtonComponent } from '../button/button.component';
 
 /**
  * Componente de Toast/Snackbar.
@@ -16,7 +15,7 @@ import { ButtonComponent } from '../button/button.component';
 @Component({
   selector: 'app-toast',
   standalone: true,
-  imports: [CommonModule, ButtonComponent],
+  imports: [CommonModule],
   template: `
     <div class="toast-container" role="region" aria-label="Notificações">
       @for (notification of notificationService.notifications(); track notification.id) {

@@ -1,0 +1,160 @@
+<div class="filter-bar">
+  <!-- Busca -->
+  <div class="search-section">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        placeholder="Buscar por nome, droga, marca..."
+        [ngModel]="filters.busca || ''"
+        (ngModelChange)="onBuscaChange($event)"
+        class="search-input"
+      />
+      <button *ngIf="filters.busca" type="button" class="clear-search" (click)="onBuscaChange('')">✕</button>
+    </div>
+  </div>
+
+  <!-- Filtros de status -->
+  <div class="filter-section">
+    <span class="filter-label">Status:</span>
+    <div class="filter-buttons">
+      <app-button variant="ghost" size="sm" [class.active]="!filters.status" (click)="onStatusChange(null)">
+        Todos
+      </app-button>
+      <app-button
+        variant="ghost"
+        size="sm"
+        [class.active]="filters.status === 'valido'"
+        (click)="onStatusChange('valido')"
+      >
+        <span class="status-dot valido"></span>
+        Válidos
+      </app-button>
+      <app-button
+        variant="ghost"
+        size="sm"
+        [class.active]="filters.status === 'prestes'"
+        (click)="onStatusChange('prestes')"
+      >
+        <span class="status-dot prestes"></span>
+        Prestes
+      </app-button>
+      <app-button
+        variant="ghost"
+        size="sm"
+        [class.active]="filters.status === 'vencido'"
+        (click)="onStatusChange('vencido')"
+      >
+        <span class="status-dot vencido"></span>
+        Vencidos
+      </app-button>
+    </div>
+  </div>
+
+  <!-- Filtros avançados (expansível) -->
+  <div class="advanced-filters" [class.expanded]="showAdvanced">
+    <button type="button" class="toggle-advanced" (click)="showAdvanced = !showAdvanced">
+      {{ showAdvanced ? '▲ Menos filtros' : '▼ Mais filtros' }}
+    </button>
+
+    <div *ngIf="showAdvanced" class="advanced-content">
+      <!-- Tipo -->
+      <div class="filter-group">
+        <label class="filter-label">Tipo:</label>
+        <select class="filter-select" [ngModel]="filters.tipo || ''" (ngModelChange)="onTipoChange($event)">
+          <option value="">Todos</option>
+          <option *ngFor="let tipo of tiposMedicamento" [value]="tipo">
+            {{ formatarTipo(tipo) }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Genérico -->
+      <div class="filter-group">
+        <label class="filter-label">Genérico:</label>
+        <div class="filter-buttons">
+          <app-button
+            variant="ghost"
+            size="sm"
+            [class.active]="filters.generico === null || filters.generico === undefined"
+            (click)="onGenericoChange(null)"
+          >
+            Todos
+          </app-button>
+          <app-button
+            variant="ghost"
+            size="sm"
+            [class.active]="filters.generico === true"
+            (click)="onGenericoChange(true)"
+          >
+            Genérico
+          </app-button>
+          <app-button
+            variant="ghost"
+            size="sm"
+            [class.active]="filters.generico === false"
+            (click)="onGenericoChange(false)"
+          >
+            Referência
+          </app-button>
+        </div>
+      </div>
+
+      <!-- Laboratório -->
+      <div *ngIf="laboratorios.length > 0" class="filter-group">
+        <label class="filter-label">Laboratório:</label>
+        <select
+          class="filter-select"
+          [ngModel]="filters.laboratorio || ''"
+          (ngModelChange)="onLaboratorioChange($event)"
+        >
+          <option value="">Todos</option>
+          <option *ngFor="let lab of laboratorios" [value]="lab">
+            {{ lab }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Quantidade baixa -->
+      <div class="filter-group">
+        <label class="checkbox-wrapper">
+          <input
+            type="checkbox"
+            [ngModel]="filters.quantidadeBaixa"
+            (ngModelChange)="onQuantidadeBaixaChange($event)"
+          />
+          <span class="checkbox-label">Apenas estoque baixo (&lt; 5 un)</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ordenação -->
+  <div class="sort-section">
+    <label class="filter-label">Ordenar por:</label>
+    <select class="filter-select" [ngModel]="filters.ordenarPor || ''" (ngModelChange)="onOrdenarPorChange($event)">
+      <option value="">Padrão</option>
+      <option *ngFor="let opcao of ordenacaoOpcoes" [value]="opcao.valor">
+        {{ opcao.label }}
+      </option>
+    </select>
+    <app-button
+      *ngIf="filters.ordenarPor"
+      variant="ghost"
+      size="sm"
+      (click)="toggleOrdem()"
+      class="sort-order-btn"
+      [title]="filters.ordem === 'asc' ? 'Crescente' : 'Decrescente'"
+    >
+      {{ filters.ordem === 'asc' ? '↑' : '↓' }}
+    </app-button>
+  </div>
+
+  <!-- Contagem e limpar -->
+  <div class="filter-actions">
+    <span class="filter-count"> {{ filteredCount }} de {{ totalItems }} medicamentos </span>
+    <app-button *ngIf="hasActiveFilters" variant="ghost" size="sm" (click)="onLimparFiltros()">
+      Limpar filtros
+    </app-button>
+  </div>
+</div>

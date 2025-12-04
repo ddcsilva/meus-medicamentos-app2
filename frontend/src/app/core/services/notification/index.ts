@@ -1,2 +1,2 @@
-export { NotificationService } from './notification.service';
-export * from './notification/models';
+export { NotificationService } from '../notification.service';
+export * from './models';

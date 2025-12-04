@@ -1,12 +1,6 @@
-import {
-  Component,
-  EventEmitter,
-  Input,
-  Output,
-  signal,
-} from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { ButtonComponent } from "../../../../shared/ui/button/button.component";
+import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { ButtonComponent } from '../../../../shared/ui/button/button.component';
 
 /**
  * Evento emitido ao alterar quantidade.
@@ -17,7 +11,7 @@ export interface QuantidadeChangeEvent {
   /** Quantidade anterior */
   quantidadeAnterior: number;
   /** Tipo de operação */
-  operacao: "incrementar" | "decrementar";
+  operacao: 'incrementar' | 'decrementar';
 }
 
 /**
@@ -46,248 +40,11 @@ export interface QuantidadeChangeEvent {
  * />
  */
 @Component({
-  selector: "app-quantidade-control",
+  selector: 'app-quantidade-control',
   standalone: true,
   imports: [CommonModule, ButtonComponent],
-  template: `
-    <div
-      class="quantidade-control"
-      [class.compact]="size === 'sm'"
-      [class.loading]="loading"
-      [class.success]="showSuccess()"
-      [class.error]="showError()"
-      role="group"
-      [attr.aria-label]="'Controle de quantidade: ' + quantidade + ' unidades'"
-    >
-      <!-- Botão Decrementar -->
-      <app-button
-        variant="outline"
-        [size]="size"
-        [disabled]="isDecrementDisabled"
-        (click)="onDecrementar()"
-        class="btn-minus"
-        aria-label="Diminuir quantidade"
-      >
-        <span class="btn-icon">−</span>
-      </app-button>
-
-      <!-- Display de Quantidade -->
-      <div
-        class="quantidade-display"
-        [class.updating]="loading"
-        [attr.aria-live]="loading ? 'polite' : 'off'"
-      >
-        <!-- Valor atual -->
-        <span class="quantidade-value" [class.animating]="isAnimating()">
-          {{ displayQuantidade }}
-        </span>
-
-        <!-- Total (opcional) -->
-        <span *ngIf="showTotal && quantidadeTotal" class="quantidade-total">
-          / {{ quantidadeTotal }}
-        </span>
-
-        <!-- Indicador de loading -->
-        <span *ngIf="loading" class="loading-indicator" aria-hidden="true">
-          <span class="loading-dot"></span>
-          <span class="loading-dot"></span>
-          <span class="loading-dot"></span>
-        </span>
-      </div>
-
-      <!-- Botão Incrementar -->
-      <app-button
-        variant="outline"
-        [size]="size"
-        [disabled]="isIncrementDisabled"
-        (click)="onIncrementar()"
-        class="btn-plus"
-        aria-label="Aumentar quantidade"
-      >
-        <span class="btn-icon">+</span>
-      </app-button>
-    </div>
-
-    <!-- Mensagem de erro -->
-    <div *ngIf="errorMessage()" class="error-message" role="alert">
-      {{ errorMessage() }}
-    </div>
-  `,
-  styles: [
-    `
-      :host {
-        display: inline-block;
-      }
-
-      .quantidade-control {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--spacing-sm);
-        transition: all var(--transition-fast);
-      }
-
-      .quantidade-control.compact {
-        gap: var(--spacing-xs);
-      }
-
-      /* Estados visuais */
-      .quantidade-control.loading {
-        opacity: 0.85;
-      }
-
-      .quantidade-control.success {
-        animation: pulse-success 0.3s ease-out;
-      }
-
-      .quantidade-control.error {
-        animation: shake 0.3s ease-out;
-      }
-
-      @keyframes pulse-success {
-        0% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.02);
-        }
-        100% {
-          transform: scale(1);
-        }
-      }
-
-      @keyframes shake {
-        0%,
-        100% {
-          transform: translateX(0);
-        }
-        25% {
-          transform: translateX(-4px);
-        }
-        75% {
-          transform: translateX(4px);
-        }
-      }
-
-      /* Botões */
-      .btn-icon {
-        font-size: 1.2em;
-        font-weight: var(--font-weight-bold);
-        line-height: 1;
-      }
-
-      /* Display de quantidade */
-      .quantidade-display {
-        display: flex;
-        align-items: baseline;
-        justify-content: center;
-        min-width: 56px;
-        text-align: center;
-        position: relative;
-        transition: opacity var(--transition-fast);
-      }
-
-      .quantidade-control.compact .quantidade-display {
-        min-width: 40px;
-      }
-
-      .quantidade-display.updating {
-        opacity: 0.7;
-      }
-
-      .quantidade-value {
-        font-size: var(--font-size-xl);
-        font-weight: var(--font-weight-bold);
-        color: var(--color-text-primary);
-        transition: all var(--transition-fast);
-      }
-
-      .quantidade-value.animating {
-        animation: value-change 0.2s ease-out;
-      }
-
-      @keyframes value-change {
-        0% {
-          transform: scale(1.1);
-          color: var(--color-primary);
-        }
-        100% {
-          transform: scale(1);
-        }
-      }
-
-      .quantidade-control.compact .quantidade-value {
-        font-size: var(--font-size-base);
-      }
-
-      .quantidade-total {
-        font-size: var(--font-size-sm);
-        color: var(--color-text-secondary);
-        margin-left: 2px;
-      }
-
-      .quantidade-control.compact .quantidade-total {
-        font-size: var(--font-size-xs);
-      }
-
-      /* Loading indicator */
-      .loading-indicator {
-        position: absolute;
-        bottom: -8px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 3px;
-      }
-
-      .loading-dot {
-        width: 4px;
-        height: 4px;
-        border-radius: 50%;
-        background-color: var(--color-primary);
-        animation: loading-bounce 0.6s ease-in-out infinite;
-      }
-
-      .loading-dot:nth-child(2) {
-        animation-delay: 0.1s;
-      }
-
-      .loading-dot:nth-child(3) {
-        animation-delay: 0.2s;
-      }
-
-      @keyframes loading-bounce {
-        0%,
-        100% {
-          opacity: 0.3;
-          transform: scale(0.8);
-        }
-        50% {
-          opacity: 1;
-          transform: scale(1);
-        }
-      }
-
-      /* Mensagem de erro */
-      .error-message {
-        font-size: var(--font-size-xs);
-        color: var(--color-danger);
-        margin-top: var(--spacing-xs);
-        text-align: center;
-        animation: fade-in 0.2s ease-out;
-      }
-
-      @keyframes fade-in {
-        from {
-          opacity: 0;
-          transform: translateY(-4px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-    `,
-  ],
+  templateUrl: './quantidade-control.component.html',
+  styleUrls: ['./quantidade-control.component.scss'],
 })
 export class QuantidadeControlComponent {
   // ========================================
@@ -307,7 +64,7 @@ export class QuantidadeControlComponent {
   @Input() disabled: boolean = false;
 
   /** Tamanho do componente */
-  @Input() size: "sm" | "md" | "lg" = "md";
+  @Input() size: 'sm' | 'md' | 'lg' = 'md';
 
   /** Se deve mostrar o total */
   @Input() showTotal: boolean = false;
@@ -348,7 +105,7 @@ export class QuantidadeControlComponent {
   readonly isAnimating = signal<boolean>(false);
 
   /** Mensagem de erro temporária */
-  readonly errorMessage = signal<string>("");
+  readonly errorMessage = signal<string>('');
 
   /** Feedback visual de sucesso */
   readonly showSuccess = signal<boolean>(false);
@@ -374,11 +131,7 @@ export class QuantidadeControlComponent {
    * Verifica se o botão de decremento está desabilitado.
    */
   get isDecrementDisabled(): boolean {
-    return (
-      this.disabled ||
-      this.loading ||
-      this.displayQuantidade <= this.min
-    );
+    return this.disabled || this.loading || this.displayQuantidade <= this.min;
   }
 
   /**
@@ -425,7 +178,7 @@ export class QuantidadeControlComponent {
     this.quantidadeChange.emit({
       novaQuantidade,
       quantidadeAnterior: this.quantidade,
-      operacao: "incrementar",
+      operacao: 'incrementar',
     });
   }
 
@@ -456,7 +209,7 @@ export class QuantidadeControlComponent {
     this.quantidadeChange.emit({
       novaQuantidade,
       quantidadeAnterior: this.quantidade,
-      operacao: "decrementar",
+      operacao: 'decrementar',
     });
   }
 
@@ -502,7 +255,7 @@ export class QuantidadeControlComponent {
     this.errorMessage.set(mensagem);
     this.mostrarErroVisual();
     setTimeout(() => {
-      this.errorMessage.set("");
+      this.errorMessage.set('');
     }, 3000);
   }
 

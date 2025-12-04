@@ -1,0 +1,56 @@
+<div
+  class="quantidade-control"
+  [class.compact]="size === 'sm'"
+  [class.loading]="loading"
+  [class.success]="showSuccess()"
+  [class.error]="showError()"
+  role="group"
+  [attr.aria-label]="'Controle de quantidade: ' + quantidade + ' unidades'"
+>
+  <!-- Botão Decrementar -->
+  <app-button
+    variant="outline"
+    [size]="size"
+    [disabled]="isDecrementDisabled"
+    (click)="onDecrementar()"
+    class="btn-minus"
+    aria-label="Diminuir quantidade"
+  >
+    <span class="btn-icon">−</span>
+  </app-button>
+
+  <!-- Display de Quantidade -->
+  <div class="quantidade-display" [class.updating]="loading" [attr.aria-live]="loading ? 'polite' : 'off'">
+    <!-- Valor atual -->
+    <span class="quantidade-value" [class.animating]="isAnimating()">
+      {{ displayQuantidade }}
+    </span>
+
+    <!-- Total (opcional) -->
+    <span *ngIf="showTotal && quantidadeTotal" class="quantidade-total"> / {{ quantidadeTotal }} </span>
+
+    <!-- Indicador de loading -->
+    <span *ngIf="loading" class="loading-indicator" aria-hidden="true">
+      <span class="loading-dot"></span>
+      <span class="loading-dot"></span>
+      <span class="loading-dot"></span>
+    </span>
+  </div>
+
+  <!-- Botão Incrementar -->
+  <app-button
+    variant="outline"
+    [size]="size"
+    [disabled]="isIncrementDisabled"
+    (click)="onIncrementar()"
+    class="btn-plus"
+    aria-label="Aumentar quantidade"
+  >
+    <span class="btn-icon">+</span>
+  </app-button>
+</div>
+
+<!-- Mensagem de erro -->
+<div *ngIf="errorMessage()" class="error-message" role="alert">
+  {{ errorMessage() }}
+</div>

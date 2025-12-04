@@ -1,0 +1,55 @@
+<app-card variant="elevated" [clickable]="true" class="medicamento-card" (click)="onCardClick($event)">
+  <div class="card-content">
+    <!-- Header -->
+    <div class="card-header">
+      <div class="header-info">
+        <h3 class="med-nome">{{ medicamento.nome }}</h3>
+        <p class="med-droga">{{ medicamento.droga }}</p>
+        <span *ngIf="medicamento.generico" class="med-generico"> Genérico </span>
+      </div>
+      <app-status-badge [status]="medicamento.statusValidade"></app-status-badge>
+    </div>
+
+    <!-- Foto (se houver) -->
+    <div *ngIf="medicamento.fotoUrl && showFoto" class="med-foto">
+      <img [src]="medicamento.fotoUrl" [alt]="medicamento.nome" />
+    </div>
+
+    <!-- Informações -->
+    <div class="med-info">
+      <div class="info-item">
+        <span class="info-label">Tipo</span>
+        <span class="info-value">{{ formatarTipo(medicamento.tipo) }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Quantidade</span>
+        <span
+          class="info-value"
+          [class.low-stock]="medicamento.quantidadeAtual < 5 && medicamento.quantidadeAtual > 0"
+          [class.no-stock]="medicamento.quantidadeAtual === 0"
+        >
+          {{ medicamento.quantidadeAtual }} / {{ medicamento.quantidadeTotal }} un
+        </span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Validade</span>
+        <span class="info-value" [class.vencido]="medicamento.statusValidade === 'vencido'">
+          {{ formatarData(medicamento.validade) }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Ações -->
+    <div class="card-actions" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" tabindex="-1">
+      <app-button variant="ghost" size="sm" (click)="onEditar()"> Editar </app-button>
+
+      <app-quantidade-control
+        [quantidade]="medicamento.quantidadeAtual"
+        [loading]="loading"
+        size="sm"
+        (incrementar)="onIncrementar()"
+        (decrementar)="onDecrementar()"
+      />
+    </div>
+  </div>
+</app-card>
